@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDate, type Meal } from "@/lib/nutrition";
+import { themeColors } from "@/lib/theme";
 
 type WeekDay = { key: string; future: boolean; short: string; number: number };
 
@@ -27,8 +28,13 @@ type Props = {
 };
 
 function MacroIcon({ type }: { type: "protein" | "carbs" | "fat" }) {
+  const styles = {
+    protein: "bg-[#e7f1eb] text-[#35634f]",
+    carbs: "bg-[#f7ebdf] text-[#aa7044]",
+    fat: "bg-[#edf1f5] text-[#587590]",
+  };
   const labels = { protein: "P", carbs: "C", fat: "G" };
-  return <span className={`macro-icon ${type}`}>{labels[type]}</span>;
+  return <span className={`grid size-9 place-items-center rounded-[10px] text-xs font-black ${styles[type]}`}>{labels[type]}</span>;
 }
 
 export function Dashboard(props: Props) {
@@ -39,118 +45,122 @@ export function Dashboard(props: Props) {
     onOpenMeal, onRemoveMeal,
   } = props;
 
+  const ring = {
+    background: `conic-gradient(${themeColors.brand} ${progress * 3.6}deg, ${themeColors.line} 0deg)`,
+  };
+
   return (
-    <main className="app-shell">
-      <aside className="sidebar">
-        <div className="identity">
-          <div className="identity-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 20V9m5 11V4m5 16v-7M3 20h18" /></svg>
+    <main className="min-h-screen md:grid md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)]">
+      <aside className="hidden h-screen sticky top-0 flex-col border-r border-[#dde5df] bg-[#fafcfa] px-[18px] py-7 md:flex">
+        <div className="flex items-center gap-2.5 text-sm font-black">
+          <div className="grid size-[38px] place-items-center rounded-[11px] bg-[#1a241f]" aria-hidden="true">
+            <svg className="w-5 fill-none stroke-white" viewBox="0 0 24 24" strokeWidth="1.8"><path d="M7 20V9m5 11V4m5 16v-7M3 20h18" /></svg>
           </div>
           <span>Nutrição diária</span>
         </div>
-        <nav className="desktop-nav" aria-label="Navegação">
-          <button className="nav-item active" type="button"><span aria-hidden="true">●</span> Hoje</button>
-          <button className="nav-item" type="button" onClick={onOpenProfile}><span aria-hidden="true">◷</span> Meu perfil</button>
+        <nav className="mt-[42px] grid gap-[5px]" aria-label="Navegação">
+          <button className="flex h-11 items-center gap-2.5 rounded-[10px] bg-[#e8f1ec] px-3 text-left text-[13px] font-extrabold text-[#35634f]" type="button"><span>●</span> Hoje</button>
+          <button className="flex h-11 items-center gap-2.5 rounded-[10px] text-left px-3 text-[13px] font-extrabold text-[#718078]" type="button" onClick={onOpenProfile}><span>◷</span> Meu perfil</button>
         </nav>
-        <div className="sidebar-summary">
-          <span>Meta atual</span>
-          <strong>{target.toLocaleString("pt-BR")} kcal</strong>
+        <div className="mt-auto grid gap-[5px] rounded-[14px] bg-[#1a241f] p-4 text-white">
+          <span className="text-[10px] text-[#bbc7c0]">Meta atual</span>
+          <strong className="text-[19px]">{target.toLocaleString("pt-BR")} kcal</strong>
         </div>
       </aside>
 
-      <section className="content">
-        <header className="page-header">
+      <section className="min-h-screen px-4 pb-24 pt-6 md:max-w-[1180px] md:px-10 md:pb-12 md:pt-9 xl:px-14">
+        <header className="flex items-start justify-between gap-3">
           <div>
-            <p className="eyebrow">{greeting}{profileName ? `, ${profileName}` : ""}</p>
-            <h1>{formatDate(selectedDateObject)}</h1>
+            <p className="mb-[5px] text-[11px] font-black uppercase tracking-[0.12em] text-[#4f8f72]">{greeting}{profileName ? `, ${profileName}` : ""}</p>
+            <h1 className="m-0 text-[clamp(21px,6vw,30px)] font-black tracking-[-0.04em] capitalize">{formatDate(selectedDateObject)}</h1>
           </div>
-          <button className="profile-button" type="button" onClick={onOpenProfile}>Ajustar perfil</button>
+          <button className="min-h-10 shrink-0 rounded-xl border border-line bg-paper px-3 text-xs font-extrabold text-ink" type="button" onClick={onOpenProfile}>Ajustar perfil</button>
         </header>
 
-        <div className="week-navigation">
-          <button type="button" className="week-arrow" onClick={() => onShiftWeek(-7)} aria-label="Semana anterior">←</button>
-          <div className="week-days" aria-label="Dias da semana">
+        <div className="my-[18px] grid grid-cols-[32px_minmax(0,1fr)_32px] items-center gap-[6px]">
+          <button type="button" className="size-8 h-14 rounded-[10px] border border-[#dde5df] bg-white text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-40" onClick={() => onShiftWeek(-7)} aria-label="Semana anterior">←</button>
+          <div className="grid grid-cols-7 gap-[3px]" aria-label="Dias da semana">
             {weekDays.map((day) => (
               <button
                 type="button"
                 key={day.key}
-                className="week-day"
-                data-selected={selectedDate === day.key}
-                data-future={day.future}
+                className={`grid min-w-[34px] h-14 place-items-center content-center gap-1 rounded-[10px] border text-[#718078] ${selectedDate === day.key ? "border-[#4f8f72] bg-[#e8f1ec] text-[#35634f]" : "border-transparent"} disabled:cursor-not-allowed disabled:opacity-40`}
                 disabled={day.future}
                 onClick={() => onSelectDate(day.key)}
                 aria-label={day.future ? `${day.short}, dia ${day.number}. Data futura indisponível` : `Selecionar ${day.short}, dia ${day.number}`}
                 aria-pressed={selectedDate === day.key}
               >
-                <span>{day.short}</span>
-                <strong>{day.number}</strong>
+                <span className="text-[9px] font-extrabold capitalize">{day.short}</span>
+                <strong className={`grid size-7 place-items-center rounded-full text-xs ${selectedDate === day.key ? "bg-[#35634f] text-white" : "text-[#1a241f]"}`}>{day.number}</strong>
               </button>
             ))}
           </div>
-          <button type="button" className="week-arrow" onClick={() => onShiftWeek(7)} aria-label="Próxima semana" disabled={nextWeekLocked}>→</button>
+          <button type="button" className="size-8 h-14 rounded-[10px] border border-[#dde5df] bg-white text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-40" onClick={() => onShiftWeek(7)} aria-label="Próxima semana" disabled={nextWeekLocked}>→</button>
         </div>
 
-        <div className="dashboard-grid">
-          <section className="calorie-card">
-            <div className="calorie-copy">
-              <p>Calorias restantes</p>
-              <strong>{remaining.toLocaleString("pt-BR")}</strong>
-              <span>de {target.toLocaleString("pt-BR")} kcal</span>
+        <div className="grid gap-3 md:grid-cols-[minmax(280px,1.3fr)_minmax(220px,.7fr)] xl:grid-cols-[1.15fr_.85fr_1fr]">
+          <section className="flex min-h-[184px] items-center justify-between overflow-hidden rounded-2xl border border-[#dde5df] bg-gradient-to-br from-[#fbfdfb] to-[#edf4ef] p-6 px-5 xl:min-h-[184px]">
+            <div>
+              <p className="mb-2 text-xs font-bold text-[#718078]">Calorias restantes</p>
+              <strong className="block text-[clamp(38px,12vw,58px)] leading-[0.95] tracking-[-0.07em]">{remaining.toLocaleString("pt-BR")}</strong>
+              <span className="mt-2.5 block text-xs text-[#718078]">de {target.toLocaleString("pt-BR")} kcal</span>
             </div>
-            <div className="progress-ring" style={{ "--progress": `${progress * 3.6}deg` } as React.CSSProperties}>
-              <div><strong>{totals.calories}</strong><span>consumidas</span></div>
+            <div className="grid size-[118px] shrink-0 place-items-center rounded-full" style={ring}>
+              <div className="grid size-[92px] place-content-center rounded-full bg-[#f9fbf9] text-center">
+                <strong className="text-xl">{totals.calories}</strong>
+                <span className="text-[9px] text-[#718078]">consumidas</span>
+              </div>
             </div>
           </section>
 
-          <section className="goal-card">
-            <div><p>Gasto estimado</p><strong>{Math.round(maintenance).toLocaleString("pt-BR")} kcal</strong></div>
-            <div className="goal-divider" />
-            <div><p>Taxa basal</p><strong>{Math.round(bmr).toLocaleString("pt-BR")} kcal</strong></div>
+          <section className="grid min-h-[92px] grid-cols-[1fr_1px_1fr] items-center rounded-2xl border border-[#dde5df] bg-white px-[18px] py-[14px] xl:grid-cols-1 xl:grid-rows-[1fr_1fr]">
+            <div><p className="mb-[5px] text-[11px] text-[#718078]">Gasto estimado</p><strong className="text-base">{Math.round(maintenance).toLocaleString("pt-BR")} kcal</strong></div>
+            <div className="h-11 w-px bg-[#dde5df] xl:hidden" />
+            <div className="pl-4 xl:border-t xl:border-[#dde5df] xl:pl-0 xl:pt-3"><p className="mb-[5px] text-[11px] text-[#718078]">Taxa basal</p><strong className="text-base">{Math.round(bmr).toLocaleString("pt-BR")} kcal</strong></div>
           </section>
 
-          <section className="macros-card">
-            <div className="section-heading">
-              <h2>Macronutrientes</h2>
-              <span>{meals.length} {meals.length === 1 ? "registro" : "registros"}</span>
+          <section className="rounded-2xl border border-[#dde5df] bg-white p-[18px] md:col-span-2 xl:col-span-1">
+            <div className="flex items-center justify-between">
+              <h2 className="m-0 text-base font-black">Macronutrientes</h2>
+              <span className="text-[11px] text-[#718078]">{meals.length} {meals.length === 1 ? "registro" : "registros"}</span>
             </div>
             {[
               { key: "protein" as const, label: "Proteína", total: totals.protein, target: macroTargets.protein, unit: "g" },
               { key: "carbs" as const, label: "Carboidratos", total: totals.carbs, target: macroTargets.carbs, unit: "g" },
               { key: "fat" as const, label: "Gorduras", total: totals.fat, target: macroTargets.fat, unit: "g" },
             ].map((macro) => (
-              <div className="macro-row" key={macro.key}>
+              <div className="mt-[15px] grid grid-cols-[38px_1fr] items-center gap-2.5 md:grid-cols-[38px_150px_1fr] xl:grid-cols-[38px_1fr]" key={macro.key}>
                 <MacroIcon type={macro.key} />
-                <div className="macro-name"><span>{macro.label}</span><small>{macro.total}{macro.unit} / {macro.target}{macro.unit}</small></div>
-                <div className="macro-bar"><div className={macro.key} style={{ width: `${Math.min((macro.total / macro.target) * 100, 100)}%` }} /></div>
+                <div className="col-start-2 flex items-center justify-between text-xs font-extrabold"><span>{macro.label}</span><small className="text-[10px] text-[#718078]">{macro.total}{macro.unit} / {macro.target}{macro.unit}</small></div>
+                <div className="col-start-2 h-[6px] overflow-hidden rounded-full bg-[#edf1ed] md:col-start-3 xl:col-start-2">
+                  <div className={`h-full rounded-full ${macro.key === "protein" ? "bg-[#4f8f72]" : macro.key === "carbs" ? "bg-[#d99a67]" : "bg-[#718fa8]"}`} style={{ width: `${Math.min((macro.total / macro.target) * 100, 100)}%` }} />
+                </div>
               </div>
             ))}
           </section>
         </div>
 
-        <section className="meals-section">
-          <div className="section-heading">
-            <h2>Alimentos registrados</h2>
-            <button type="button" className="text-button" onClick={onOpenMeal}>+ Adicionar</button>
+        <section className="mt-[22px]">
+          <div className="flex items-center justify-between">
+            <h2 className="m-0 text-base font-black">Alimentos registrados</h2>
+            <button type="button" className="border-0 bg-transparent text-xs font-extrabold text-[#35634f]" onClick={onOpenMeal}>+ Adicionar</button>
           </div>
           {meals.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon" aria-hidden="true">＋</div>
-              <h3>Nenhum alimento registrado</h3>
-              <p>Adicione o primeiro item consumido hoje.</p>
-              <button type="button" onClick={onOpenMeal}>Registrar alimento</button>
+            <div className="mt-3 grid min-h-[210px] place-items-center content-center rounded-2xl border border-[#dde5df] bg-white text-center">
+              <div className="grid size-[42px] place-items-center rounded-full bg-[#e8f1ec] text-2xl text-[#35634f]">＋</div>
+              <h3 className="mb-1 mt-3 text-sm">Nenhum alimento registrado</h3>
+              <p className="mb-[14px] mt-0 text-xs text-[#718078]">Adicione o primeiro item consumido hoje.</p>
+              <button type="button" className="min-h-11 rounded-[10px] bg-[#1a241f] px-4 text-xs font-extrabold text-white" onClick={onOpenMeal}>Registrar alimento</button>
             </div>
           ) : (
-            <div className="meal-list">
+            <div className="mt-3 grid gap-2">
               {meals.map((meal) => (
-                <article className="meal-row" key={meal.id}>
-                  <div className="meal-index" aria-hidden="true">{meal.name.charAt(0).toUpperCase()}</div>
-                  <div className="meal-name">
-                    <strong>{meal.name}</strong>
-                    <span>{meal.category ?? "Refeição"} · {meal.time}</span>
-                  </div>
-                  <div className="meal-macros"><span>P {meal.protein}g</span><span>C {meal.carbs}g</span><span>G {meal.fat}g</span></div>
-                  <strong className="meal-calories">{meal.calories} kcal</strong>
-                  <button type="button" className="remove-button" onClick={() => onRemoveMeal(meal.id)} aria-label={`Remover ${meal.name}`}>×</button>
+                <article className="grid min-h-[76px] grid-cols-[44px_1fr_auto] items-center gap-2.5 rounded-2xl border border-[#dde5df] bg-white p-2.5 md:grid-cols-[44px_1fr_250px_110px_34px]" key={meal.id}>
+                  <div className="grid size-11 place-items-center rounded-xl bg-[#e8f1ec] font-black text-[#35634f]">{meal.name.charAt(0).toUpperCase()}</div>
+                  <div className="min-w-0"><strong className="block truncate text-xs">{meal.name}</strong><span className="mt-1 block text-[10px] text-[#718078]">{meal.category ?? "Refeição"} · {meal.time}</span></div>
+                  <div className="hidden gap-[14px] text-[11px] text-[#718078] md:flex"><span>P {meal.protein}g</span><span>C {meal.carbs}g</span><span>G {meal.fat}g</span></div>
+                  <strong className="col-start-3 text-xs md:col-start-auto">{meal.calories} kcal</strong>
+                  <button type="button" className="hidden size-[30px] place-items-center rounded-full bg-[#edf1ed] text-[18px] text-[#718078] md:grid" onClick={() => onRemoveMeal(meal.id)} aria-label={`Remover ${meal.name}`}>×</button>
                 </article>
               ))}
             </div>
@@ -158,7 +168,7 @@ export function Dashboard(props: Props) {
         </section>
       </section>
 
-      <button className="mobile-add" type="button" onClick={onOpenMeal} aria-label="Adicionar alimento">＋</button>
+      <button className="fixed bottom-[18px] right-[18px] z-20 grid size-14 place-items-center rounded-full bg-[#1a241f] text-[28px] leading-none text-white shadow-[0_12px_26px_rgba(28,49,39,.24)] md:hidden" type="button" onClick={onOpenMeal} aria-label="Adicionar alimento">＋</button>
     </main>
   );
 }
