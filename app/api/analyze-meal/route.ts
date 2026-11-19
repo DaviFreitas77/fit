@@ -6,6 +6,10 @@ type MealAnalysis = {
   protein: number;
   carbs: number;
   fat: number;
+  foods: Array<{
+    name: string;
+    calories: number;
+  }>;
 };
 
 export async function POST(request: Request) {
@@ -30,7 +34,7 @@ export async function POST(request: Request) {
   const prompt = `Analise esta refeição descrita por um usuário em português brasileiro:
 "${description}"
 
-Calcule uma estimativa realista para todos os alimentos juntos.
+Calcule uma estimativa realista para todos os alimentos juntos e também para cada alimento individualmente, considerando a quantidade informada.
 Considere medidas caseiras e porções informadas.
 Retorne apenas JSON válido, sem Markdown.
 
@@ -40,6 +44,10 @@ Campos:
 - protein: número inteiro de proteínas em gramas
 - carbs: número inteiro de carboidratos em gramas
 - fat: número inteiro de gorduras em gramas
+- foods: lista de todos os alimentos identificados, cada um com:
+  - name: nome do alimento, incluindo a quantidade informada
+  - calories: número inteiro de calorias estimadas daquele alimento
+Inclua um item separado para cada alimento, nunca agrupe alimentos diferentes.
 
 Se houver incerteza, use uma estimativa conservadora.`;
 
@@ -94,12 +102,21 @@ Se houver incerteza, use uma estimativa conservadora.`;
 
   try {
     const analysis = JSON.parse(text) as Partial<MealAnalysis>;
+    const foods = Array.isArray(analysis.foods)
+      ? analysis.foods
+          .map((food) => ({
+            name: String(food?.name ?? "").trim(),
+            calories: Math.max(0, Math.round(Number(food?.calories) || 0)),
+          }))
+          .filter((food) => food.name)
+      : [];
     const result: MealAnalysis = {
       name: String(analysis.name ?? "Refeição"),
       calories: Math.max(0, Math.round(Number(analysis.calories) || 0)),
       protein: Math.max(0, Math.round(Number(analysis.protein) || 0)),
       carbs: Math.max(0, Math.round(Number(analysis.carbs) || 0)),
       fat: Math.max(0, Math.round(Number(analysis.fat) || 0)),
+      foods,
     };
     return NextResponse.json(result);
   } catch {

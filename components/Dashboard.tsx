@@ -33,6 +33,7 @@ type Props = {
 export function Dashboard(props: Props) {
   const [bmrInfoOpen, setBmrInfoOpen] = useState(false);
   const [maintenanceInfoOpen, setMaintenanceInfoOpen] = useState(false);
+  const [selectedMeal, setSelectedMeal] = useState<Meal | null>(null);
   const bmrInfoRef = useRef<HTMLDivElement>(null);
   const maintenanceInfoRef = useRef<HTMLDivElement>(null);
 
@@ -321,8 +322,17 @@ export function Dashboard(props: Props) {
             <div className="mt-3 grid gap-2">
               {meals.map((meal) => (
                 <article
-                  className="grid min-h-[76px] grid-cols-[44px_1fr_auto] items-center gap-2.5 rounded-2xl border border-line bg-paper p-2.5 md:grid-cols-[44px_1fr_250px_110px_34px]"
+                  className="grid min-h-[76px] cursor-pointer grid-cols-[44px_1fr_auto] items-center gap-2.5 rounded-2xl border border-line bg-paper p-2.5 md:grid-cols-[44px_1fr_250px_110px_34px]"
                   key={meal.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedMeal(meal)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSelectedMeal(meal);
+                    }
+                  }}
                 >
                   <div className="grid size-11 place-items-center rounded-xl bg-brand-soft font-black text-brand-foreground">
                     {meal.name.charAt(0).toUpperCase()}
@@ -346,7 +356,10 @@ export function Dashboard(props: Props) {
                   <button
                     type="button"
                     className="hidden size-[30px] place-items-center rounded-full bg-line text-[18px] text-muted md:grid"
-                    onClick={() => onRemoveMeal(meal.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onRemoveMeal(meal.id);
+                    }}
                     aria-label={`Remover ${meal.name}`}
                   >
                     ×
@@ -357,6 +370,54 @@ export function Dashboard(props: Props) {
           )}
         </section>
       </section>
+
+      {selectedMeal && (
+        <div
+          className="fixed inset-0 z-40 flex items-end justify-center bg-overlay/40 p-0 backdrop-blur-sm md:items-center md:p-4"
+          role="presentation"
+          onMouseDown={() => setSelectedMeal(null)}
+        >
+          <section
+            className="w-full max-w-[460px] rounded-t-[22px] bg-card p-5 shadow-2xl md:rounded-[18px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="meal-details-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="mb-1 text-xs font-black  text-brand">Detalhes da refeição</p>
+                <h2 id="meal-details-title" className="m-0 text-xl font-black">{selectedMeal.name}</h2>
+                <p className="mt-1 text-xs text-muted">{selectedMeal.category} · {selectedMeal.time}</p>
+              </div>
+              <button
+                type="button"
+                className="grid size-[34px] place-items-center rounded-full border border-border bg-card text-xl text-muted"
+                onClick={() => setSelectedMeal(null)}
+                aria-label="Fechar detalhes"
+              >
+                ×
+              </button>
+            </div>
+            <div className="mt-5 grid gap-2">
+              {selectedMeal.foods.length > 0 ? selectedMeal.foods.map((food, index) => (
+                <div key={`${food.name}-${index}`} className="flex items-center justify-between rounded-xl bg-surface px-3 py-3 text-xs">
+                  <span>{food.name}</span>
+                  <strong>{food.calories} kcal</strong>
+                </div>
+              )) : (
+                <p className="rounded-xl bg-surface p-3 text-xs text-muted">
+                  Os alimentos individuais não foram informados para esta refeição.
+                </p>
+              )}
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
+              <strong>Total</strong>
+              <strong>{selectedMeal.calories} kcal</strong>
+            </div>
+          </section>
+        </div>
+      )}
 
       <button
         className="fixed bottom-[18px] right-[18px] z-20 grid size-14 place-items-center rounded-full bg-primary text-[28px] leading-none text-primary-foreground shadow-xl md:hidden"

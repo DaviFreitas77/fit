@@ -29,6 +29,7 @@ export function useNutritionApp() {
     protein: "",
     carbs: "",
     fat: "",
+    foods: [],
   });
   const [analyzingMeal, setAnalyzingMeal] = useState(false);
   const [mealError, setMealError] = useState("");
@@ -45,7 +46,16 @@ export function useNutritionApp() {
         setActivityChoice(parsed.activity);
         setProfileConfigured(Boolean(parsed.name));
       }
-      if (savedDays) setDays(JSON.parse(savedDays));
+      if (savedDays) {
+        const parsedDays = JSON.parse(savedDays) as DayData;
+        const normalizedDays = Object.fromEntries(
+          Object.entries(parsedDays).map(([date, meals]) => [
+            date,
+            meals.map((meal) => ({ ...meal, foods: meal.foods ?? [] })),
+          ]),
+        ) as DayData;
+        setDays(normalizedDays);
+      }
       setLoaded(true);
     });
   }, []);
@@ -158,11 +168,22 @@ export function useNutritionApp() {
       carbs: Number(form.get("carbs") || 0),
       fat: Number(form.get("fat") || 0),
       time: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date()),
+      foods: mealDraft.foods,
     };
     setDays((current) => ({
       ...current,
       [selectedDate]: [meal, ...(current[selectedDate] ?? [])],
     }));
+    setMealDescription("");
+    setMealDraft({
+      name: "",
+      calories: "",
+      protein: "",
+      carbs: "",
+      fat: "",
+      foods: [],
+    });
+    setMealError("");
     setMealOpen(false);
   }
 
@@ -197,6 +218,7 @@ export function useNutritionApp() {
         protein: String(data.protein),
         carbs: String(data.carbs),
         fat: String(data.fat),
+        foods: Array.isArray(data.foods) ? data.foods : [],
       });
     } catch (error) {
       setMealError(

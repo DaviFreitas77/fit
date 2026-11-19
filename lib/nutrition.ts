@@ -15,6 +15,11 @@ export type MealCategory =
   | "Janta"
   | "Ceia";
 
+export type MealFood = {
+  name: string;
+  calories: number;
+};
+
 export type Meal = {
   id: string;
   name: string;
@@ -24,6 +29,7 @@ export type Meal = {
   carbs: number;
   fat: number;
   time: string;
+  foods: MealFood[];
 };
 
 export type DayData = Record<string, Meal[]>;
@@ -34,6 +40,7 @@ export type MealDraft = {
   protein: string;
   carbs: string;
   fat: string;
+  foods: MealFood[];
 };
 
 export const defaultProfile: Profile = {
