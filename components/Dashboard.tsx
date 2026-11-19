@@ -5,6 +5,7 @@ import { formatDate, type Meal } from "@/lib/nutrition";
 import { themeColors } from "@/lib/theme";
 import { BsArrowLeftShort, BsArrowRightShort } from "react-icons/bs";
 import { FaRegUser } from "react-icons/fa";
+import { AnimatePresence, motion } from "motion/react";
 
 type WeekDay = { key: string; future: boolean; short: string; number: number };
 
@@ -80,7 +81,12 @@ export function Dashboard(props: Props) {
   };
 
   return (
-    <main className="min-h-screen md:grid md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)]">
+    <motion.main
+      className="min-h-screen md:grid md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[250px_minmax(0,1fr)]"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+    >
       <aside className="sticky top-0 hidden h-screen flex-col border-r border-line bg-card px-[18px] py-7 md:flex">
         <div className="flex items-center gap-2.5 text-sm font-black">
           <div
@@ -321,9 +327,12 @@ export function Dashboard(props: Props) {
           ) : (
             <div className="mt-3 grid gap-2">
               {meals.map((meal) => (
-                <article
+                <motion.div
                   className="grid min-h-[76px] cursor-pointer grid-cols-[44px_1fr_auto] items-center gap-2.5 rounded-2xl border border-line bg-paper p-2.5 md:grid-cols-[44px_1fr_250px_110px_34px]"
                   key={meal.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: Math.min(meals.indexOf(meal), 5) * 0.06 }}
                   role="button"
                   tabIndex={0}
                   onClick={() => setSelectedMeal(meal)}
@@ -364,26 +373,34 @@ export function Dashboard(props: Props) {
                   >
                     ×
                   </button>
-                </article>
+                </motion.div>
               ))}
             </div>
           )}
         </section>
       </section>
 
-      {selectedMeal && (
-        <div
-          className="fixed inset-0 z-40 flex items-end justify-center bg-overlay/40 p-0 backdrop-blur-sm md:items-center md:p-4"
-          role="presentation"
-          onMouseDown={() => setSelectedMeal(null)}
-        >
-          <section
-            className="w-full max-w-[460px] rounded-t-[22px] bg-card p-5 shadow-2xl md:rounded-[18px]"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="meal-details-title"
-            onMouseDown={(event) => event.stopPropagation()}
+      <AnimatePresence>
+        {selectedMeal && (
+          <motion.div
+            className="fixed inset-0 z-40 flex items-end justify-center bg-overlay/40 p-0 backdrop-blur-sm md:items-center md:p-4"
+            role="presentation"
+            onMouseDown={() => setSelectedMeal(null)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
           >
+            <motion.div
+              className="w-full max-w-[460px] rounded-t-[22px] bg-card p-5 shadow-2xl md:rounded-[18px]"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="meal-details-title"
+              onMouseDown={(event) => event.stopPropagation()}
+              initial={{ opacity: 0, y: 18, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
             <div className="flex items-start justify-between">
               <div>
                 <p className="mb-1 text-xs font-black  text-brand">Detalhes da refeição</p>
@@ -415,9 +432,10 @@ export function Dashboard(props: Props) {
               <strong>Total</strong>
               <strong>{selectedMeal.calories} kcal</strong>
             </div>
-          </section>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <button
         className="fixed bottom-[18px] right-[18px] z-20 grid size-14 place-items-center rounded-full bg-primary text-[28px] leading-none text-primary-foreground shadow-xl md:hidden"
@@ -427,6 +445,6 @@ export function Dashboard(props: Props) {
       >
         ＋
       </button>
-    </main>
+    </motion.main>
   );
 }

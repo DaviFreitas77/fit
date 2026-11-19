@@ -2,6 +2,7 @@
 
 import { FormEvent } from "react";
 import { type MealDraft } from "@/lib/nutrition";
+import { motion } from "motion/react";
 
 type Props = {
   open: boolean;
@@ -20,19 +21,41 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
   if (!open) return null;
   const update = (field: keyof MealDraft, value: string) => onDraftChange({ ...draft, [field]: value });
   const inputClass = "h-12 w-full rounded-[11px] border border-border bg-surface px-3 text-[13px] text-primary outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10";
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+  };
+  const formVariants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } },
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-overlay/40 backdrop-blur-sm md:items-center" role="presentation" onMouseDown={onClose}>
-      <form className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[22px] bg-card px-4 pb-6 pt-5 shadow-2xl md:rounded-[18px] md:p-6" onSubmit={onSubmit} onMouseDown={(event) => event.stopPropagation()}>
-        <div className="mb-[14px] flex items-start justify-between">
+    <motion.div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-overlay/40 backdrop-blur-sm md:items-center"
+      role="presentation"
+      onMouseDown={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <motion.form
+        className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[22px] bg-card px-4 pb-6 pt-5 shadow-2xl md:rounded-[18px] md:p-6"
+        onSubmit={onSubmit}
+        onMouseDown={(event) => event.stopPropagation()}
+        variants={formVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div className="mb-[14px] flex items-start justify-between" variants={itemVariants}>
           <div>
             <p className="mb-[5px] text-xs font-black  text-brand">Novo registro</p>
             <h2 className="m-0 text-xl font-black">Adicionar alimento</h2>
           </div>
-          <button type="button" className="grid size-[34px] place-items-center rounded-full border border-border bg-card text-xl text-muted" onClick={onClose} aria-label="Fechar">×</button>
-        </div>
+          <motion.button type="button" className="grid size-[34px] place-items-center rounded-full border border-border bg-card text-xl text-muted" onClick={onClose} aria-label="Fechar" whileTap={{ scale: 0.9 }}>×</motion.button>
+        </motion.div>
 
-        <div className="grid gap-2.5 rounded-2xl border border-border bg-brand-soft/30 p-[14px]">
+        <motion.div className="grid gap-2.5 rounded-2xl border border-border bg-brand-soft/30 p-[14px]" variants={itemVariants}>
           <div className="flex items-center justify-between">
             <div className="grid gap-0.5">
               <strong className="text-xs text-primary">Descrever refeição</strong>
@@ -40,25 +63,26 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
             </div>
             <span className="animate-pulse bg-gradient-to-r from-brand via-fat to-pink-400 bg-clip-text text-sm  tracking-[0.04em] text-transparent">IA</span>
           </div>
-          <textarea
+          <motion.textarea
             className="h-[82px] min-h-[82px] w-full resize-y border-0 border-b border-border bg-transparent px-0 py-3 text-[13px] leading-[1.45] text-primary outline-none placeholder:text-muted focus:border-border focus:ring-0"
             value={description}
             onChange={(event) => onDescriptionChange(event.target.value)}
             placeholder="Ex.: 6 colheres de sopa de arroz e 2 ovos fritos com pouco óleo"
             rows={3}
+            variants={itemVariants}
           />
           {error && <p className="text-[11px] font-extrabold text-error" role="alert">{error}</p>}
-          <button type="button" className="min-h-11 w-full rounded-xl bg-brand-dark text-xs font-extrabold text-white disabled:cursor-wait disabled:opacity-65" onClick={onAnalyze} disabled={analyzing}>
+          <motion.button type="button" className="min-h-11 w-full rounded-xl bg-brand-dark text-xs font-extrabold text-white disabled:cursor-wait disabled:opacity-65" onClick={onAnalyze} disabled={analyzing} whileTap={{ scale: 0.98 }}>
             {analyzing ? "Analisando..." : "Preencher com IA"}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <div className="mb-2 mt-[18px] flex items-center justify-between px-0.5">
+        <motion.div className="mb-2 mt-[18px] flex items-center justify-between px-0.5" variants={itemVariants}>
           <strong className="text-xs">Detalhes da refeição</strong>
           <span className="text-[10px] text-muted">Você pode ajustar</span>
-        </div>
-        <div className="grid grid-cols-1 gap-[9px] rounded-[14px] border border-border bg-card p-3">
-          <label className="grid gap-[6px] text-[10px] font-extrabold text-muted">
+        </motion.div>
+        <motion.div className="grid grid-cols-1 gap-[9px] rounded-[14px] border border-border bg-card p-3" variants={itemVariants}>
+          <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Refeição
             <select className={inputClass} name="category" defaultValue="Almoço">
               <option value="Café da manhã">Café da manhã</option>
@@ -67,30 +91,30 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
               <option value="Janta">Janta</option>
               <option value="Ceia">Ceia</option>
             </select>
-          </label>
-          <label className="grid gap-[6px] text-[10px] font-extrabold text-muted">
+          </motion.label>
+          <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Nome
             <input className={inputClass} name="name" type="text" required value={draft.name} onChange={(event) => update("name", event.target.value)} placeholder="Ex.: arroz, frango e salada" />
-          </label>
-          <label className="grid gap-[6px] text-[10px] font-extrabold text-muted">
+          </motion.label>
+          <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Calorias
             <input className={inputClass} name="calories" type="number" min="0" required value={draft.calories} onChange={(event) => update("calories", event.target.value)} placeholder="kcal" />
-          </label>
-          <label className="grid gap-[6px] text-[10px] font-extrabold text-muted">
+          </motion.label>
+          <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Proteínas
             <input className={inputClass} name="protein" type="number" min="0" step="0.1" value={draft.protein} onChange={(event) => update("protein", event.target.value)} placeholder="g" />
-          </label>
-          <label className="grid gap-[6px] text-[10px] font-extrabold text-muted">
+          </motion.label>
+          <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Carboidratos
             <input className={inputClass} name="carbs" type="number" min="0" step="0.1" value={draft.carbs} onChange={(event) => update("carbs", event.target.value)} placeholder="g" />
-          </label>
-          <label className="grid gap-[6px] text-[10px] font-extrabold text-muted">
+          </motion.label>
+          <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Gorduras
             <input className={inputClass} name="fat" type="number" min="0" step="0.1" value={draft.fat} onChange={(event) => update("fat", event.target.value)} placeholder="g" />
-          </label>
-        </div>
-        <button className="mt-[14px] min-h-12 w-full rounded-xl bg-primary text-xs font-extrabold text-primary-foreground" type="submit">Registrar</button>
-      </form>
-    </div>
+          </motion.label>
+        </motion.div>
+        <motion.button className="mt-[14px] min-h-12 w-full rounded-xl bg-primary text-xs font-extrabold text-primary-foreground" type="submit" variants={itemVariants} whileTap={{ scale: 0.98 }}>Registrar</motion.button>
+      </motion.form>
+    </motion.div>
   );
 }
