@@ -44,7 +44,7 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
             className="h-[82px] min-h-[82px] w-full resize-y border-0 border-b border-border bg-transparent px-0 py-3 text-[13px] leading-[1.45] text-primary outline-none placeholder:text-muted focus:border-border focus:ring-0"
             value={description}
             onChange={(event) => onDescriptionChange(event.target.value)}
-            placeholder="Ex.: 4 colheres de sopa de arroz e 2 ovos fritos"
+            placeholder="Ex.: 6 colheres de sopa de arroz e 2 ovos fritos com pouco óleo"
             rows={3}
           />
           {error && <p className="text-[11px] font-extrabold text-error" role="alert">{error}</p>}
