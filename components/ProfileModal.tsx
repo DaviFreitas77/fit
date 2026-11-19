@@ -20,7 +20,7 @@ export function ProfileModal({ open, profile, activityChoice, onActivityChange, 
       <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[22px] bg-card px-4 pb-6 pt-5 shadow-2xl md:w-[min(520px,calc(100vw-32px))] md:rounded-[18px] md:p-6" onMouseDown={(event) => event.stopPropagation()}>
         <div className="mb-[18px] flex items-start justify-between">
           <div>
-            <p className="mb-[5px] text-[11px] font-black uppercase tracking-[0.12em] text-brand">Cálculo automático</p>
+            <p className="mb-[5px] text-xs font-black  text-brand">Cálculo automático</p>
             <h2 className="m-0 text-[22px] font-black">Meu perfil</h2>
           </div>
           <button

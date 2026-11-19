@@ -30,22 +30,6 @@ type Props = {
   onRemoveMeal: (id: string) => void;
 };
 
-function MacroIcon({ type }: { type: "protein" | "carbs" | "fat" }) {
-  const styles = {
-    protein: "bg-brand-soft text-brand-dark",
-    carbs: "bg-carbs-soft text-carbs-foreground",
-    fat: "bg-fat-soft text-fat-foreground",
-  };
-  const labels = { protein: "P", carbs: "C", fat: "G" };
-  return (
-    <span
-      className={`grid size-9 place-items-center rounded-[10px] text-xs font-black ${styles[type]}`}
-    >
-      {labels[type]}
-    </span>
-  );
-}
-
 export function Dashboard(props: Props) {
   const [bmrInfoOpen, setBmrInfoOpen] = useState(false);
   const [maintenanceInfoOpen, setMaintenanceInfoOpen] = useState(false);
@@ -204,27 +188,46 @@ export function Dashboard(props: Props) {
           </button>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-[minmax(280px,1.3fr)_minmax(220px,.7fr)] xl:grid-cols-[1.15fr_.85fr_1fr]">
-          <section className="flex min-h-[184px] items-center justify-between overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-card to-brand-soft/40 p-6 px-5 xl:min-h-[184px]">
-            <div>
-              <p className="mb-2 text-xs font-bold text-muted">
-                Calorias restantes
-              </p>
-              <strong className="block text-[clamp(38px,12vw,58px)] leading-[0.95] tracking-[-0.07em]">
-                {remaining.toLocaleString("pt-BR")}
-              </strong>
-              <span className="mt-2.5 block text-xs text-muted">
-                de {target.toLocaleString("pt-BR")} kcal
-              </span>
-            </div>
-            <div
-              className="grid size-[118px] shrink-0 place-items-center rounded-full"
-              style={ring}
-            >
-              <div className="grid size-[92px] place-content-center rounded-full bg-card text-center">
-                <strong className="text-xl">{totals.calories}</strong>
-                <span className="text-[9px] text-muted">consumidas</span>
+        <div className="grid gap-3 md:grid-cols-[minmax(280px,1.3fr)_minmax(220px,.7fr)] xl:grid-cols-[1.25fr_.75fr]">
+          <section className="overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-card to-brand-soft/40 p-6 px-5">
+            <div className="flex min-h-[118px] items-center justify-between gap-4">
+              <div>
+                <p className="mb-2 text-xs font-bold text-muted">
+                  Calorias restantes
+                </p>
+                <strong className="block text-[clamp(38px,12vw,58px)] leading-[0.95] tracking-[-0.07em]">
+                  {remaining.toLocaleString("pt-BR")}
+                </strong>
+                <span className="mt-2.5 block text-xs text-muted">
+                  de {target.toLocaleString("pt-BR")} kcal
+                </span>
               </div>
+              <div
+                className="grid size-[118px] shrink-0 place-items-center rounded-full"
+                style={ring}
+              >
+                <div className="grid size-[92px] place-content-center rounded-full bg-card text-center">
+                  <strong className="text-xl">{totals.calories}</strong>
+                  <span className="text-[9px] text-muted">consumidas</span>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4">
+              {[
+                { label: "Proteína", total: totals.protein, target: macroTargets.protein, color: "bg-brand" },
+                { label: "Carbos", total: totals.carbs, target: macroTargets.carbs, color: "bg-carbs" },
+                { label: "Gorduras", total: totals.fat, target: macroTargets.fat, color: "bg-fat" },
+              ].map((macro) => (
+                <div className="min-w-0" key={macro.label}>
+                  <div className="mb-2 h-1 rounded-full bg-line">
+                    <div className={`h-full rounded-full ${macro.color}`} style={{ width: `${Math.min((macro.total / macro.target) * 100, 100)}%` }} />
+                  </div>
+                  <span className="block truncate text-[10px] font-extrabold text-muted">{macro.label}</span>
+                  <strong className="mt-0.5 block text-xs">
+                    {macro.total}g<span className="font-normal text-muted">/{macro.target}g</span>
+                  </strong>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -284,60 +287,6 @@ export function Dashboard(props: Props) {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-line bg-paper p-[18px] md:col-span-2 xl:col-span-1">
-            <div className="flex items-center justify-between">
-              <h2 className="m-0 text-base font-black">Macronutrientes</h2>
-              <span className="text-[11px] text-muted">
-                {meals.length} {meals.length === 1 ? "registro" : "registros"}
-              </span>
-            </div>
-            {[
-              {
-                key: "protein" as const,
-                label: "Proteína",
-                total: totals.protein,
-                target: macroTargets.protein,
-                unit: "g",
-              },
-              {
-                key: "carbs" as const,
-                label: "Carboidratos",
-                total: totals.carbs,
-                target: macroTargets.carbs,
-                unit: "g",
-              },
-              {
-                key: "fat" as const,
-                label: "Gorduras",
-                total: totals.fat,
-                target: macroTargets.fat,
-                unit: "g",
-              },
-            ].map((macro) => (
-              <div
-                className="mt-[15px] grid grid-cols-[38px_1fr] items-center gap-2.5 md:grid-cols-[38px_150px_1fr] xl:grid-cols-[38px_1fr]"
-                key={macro.key}
-              >
-                <MacroIcon type={macro.key} />
-                <div className="col-start-2 flex items-center justify-between text-xs font-extrabold">
-                  <span>{macro.label}</span>
-                  <small className="text-[10px] text-muted">
-                    {macro.total}
-                    {macro.unit} / {macro.target}
-                    {macro.unit}
-                  </small>
-                </div>
-                <div className="col-start-2 h-[6px] overflow-hidden rounded-full bg-line md:col-start-3 xl:col-start-2">
-                  <div
-                    className={`h-full rounded-full ${macro.key === "protein" ? "bg-brand" : macro.key === "carbs" ? "bg-carbs" : "bg-fat"}`}
-                    style={{
-                      width: `${Math.min((macro.total / macro.target) * 100, 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </section>
         </div>
 
         <section className="mt-[22px]">

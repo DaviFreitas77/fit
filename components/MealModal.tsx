@@ -26,7 +26,7 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
       <form className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-t-[22px] bg-card px-4 pb-6 pt-5 shadow-2xl md:rounded-[18px] md:p-6" onSubmit={onSubmit} onMouseDown={(event) => event.stopPropagation()}>
         <div className="mb-[14px] flex items-start justify-between">
           <div>
-            <p className="mb-[5px] text-[11px] font-black uppercase tracking-[0.12em] text-brand">Novo registro</p>
+            <p className="mb-[5px] text-xs font-black  text-brand">Novo registro</p>
             <h2 className="m-0 text-xl font-black">Adicionar alimento</h2>
           </div>
           <button type="button" className="grid size-[34px] place-items-center rounded-full border border-border bg-card text-xl text-muted" onClick={onClose} aria-label="Fechar">×</button>
@@ -38,7 +38,7 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
               <strong className="text-xs text-primary">Descrever refeição</strong>
               <span className="text-[10px] text-muted">IA pode preencher os dados</span>
             </div>
-            <span className="animate-pulse bg-gradient-to-r from-brand via-fat to-carbs bg-clip-text text-[11px] font-black tracking-[0.04em] text-transparent">IA</span>
+            <span className="animate-pulse bg-gradient-to-r from-brand via-fat to-pink-400 bg-clip-text text-sm  tracking-[0.04em] text-transparent">IA</span>
           </div>
           <textarea
             className="h-[82px] min-h-[82px] w-full resize-y border-0 border-b border-border bg-transparent px-0 py-3 text-[13px] leading-[1.45] text-primary outline-none placeholder:text-muted focus:border-border focus:ring-0"

@@ -18,6 +18,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
+  
   const description = String(body?.description ?? "").trim();
   if (!description) {
     return NextResponse.json(
