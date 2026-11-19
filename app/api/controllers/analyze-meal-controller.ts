@@ -1,16 +1,7 @@
 import { NextResponse } from "next/server";
-
-type MealAnalysis = {
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  foods: Array<{
-    name: string;
-    calories: number;
-  }>;
-};
+import { ValidationError } from "yup";
+import { MealAnalysisDTO } from "../dtos/meals/analyze-meal-dto";
+import { analyzeMealSchema } from "../schemas/meal-schema";
 
 
 export async function POST(request: Request) {
@@ -22,14 +13,31 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json().catch(() => null);
-  
-  const description = String(body?.description ?? "").trim();
-  if (!description) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
     return NextResponse.json(
-      { error: "Descreva os alimentos consumidos." },
+      { error: "O corpo da requisição precisa ser um JSON válido." },
       { status: 400 },
     );
+  }
+
+  let description: string;
+  try {
+    const validatedBody = await analyzeMealSchema.validate(body, {
+      abortEarly: false,
+      stripUnknown: true,
+    });
+    description = validatedBody.description;
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return NextResponse.json(
+        { error: error.errors , details: error.errors },
+        { status: 400 },
+      );
+    }
+    throw error;
   }
 
   const prompt = `Analise esta refeição descrita por um usuário em português brasileiro:
@@ -102,7 +110,7 @@ Se houver incerteza, use uma estimativa conservadora.`;
   }
 
   try {
-    const analysis = JSON.parse(text) as Partial<MealAnalysis>;
+    const analysis = JSON.parse(text) as Partial<MealAnalysisDTO>;
     const foods = Array.isArray(analysis.foods)
       ? analysis.foods
           .map((food) => ({
@@ -111,7 +119,7 @@ Se houver incerteza, use uma estimativa conservadora.`;
           }))
           .filter((food) => food.name)
       : [];
-    const result: MealAnalysis = {
+    const result: MealAnalysisDTO = {
       name: String(analysis.name ?? "Refeição"),
       calories: Math.max(0, Math.round(Number(analysis.calories) || 0)),
       protein: Math.max(0, Math.round(Number(analysis.protein) || 0)),
