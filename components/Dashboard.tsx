@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { formatDate, type Meal } from "@/lib/nutrition";
 import { themeColors } from "@/lib/theme";
 import { BsArrowLeftShort, BsArrowRightShort } from "react-icons/bs";
@@ -46,6 +47,27 @@ function MacroIcon({ type }: { type: "protein" | "carbs" | "fat" }) {
 }
 
 export function Dashboard(props: Props) {
+  const [bmrInfoOpen, setBmrInfoOpen] = useState(false);
+  const [maintenanceInfoOpen, setMaintenanceInfoOpen] = useState(false);
+  const bmrInfoRef = useRef<HTMLDivElement>(null);
+  const maintenanceInfoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!bmrInfoOpen && !maintenanceInfoOpen) return;
+
+    function closeOnOutsideClick(event: MouseEvent) {
+      if (!bmrInfoRef.current?.contains(event.target as Node)) {
+        setBmrInfoOpen(false);
+      }
+      if (!maintenanceInfoRef.current?.contains(event.target as Node)) {
+        setMaintenanceInfoOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [bmrInfoOpen, maintenanceInfoOpen]);
+
   const {
     profileName,
     greeting,
@@ -207,18 +229,58 @@ export function Dashboard(props: Props) {
           </section>
 
           <section className="grid min-h-[92px] grid-cols-[1fr_1px_1fr] items-center rounded-2xl border border-border bg-card px-[18px] py-[14px] xl:grid-cols-1 xl:grid-rows-[1fr_1fr]">
-            <div>
-              <p className="mb-[5px] text-[11px] text-muted">Gasto estimado</p>
+            <div ref={maintenanceInfoRef} className="relative">
+              <div className="mb-[5px] flex items-center gap-1.5">
+                <p className="text-[11px] text-muted">Gasto estimado</p>
+                <button
+                  type="button"
+                  className="grid size-[18px] place-items-center rounded-full border border-border bg-card text-[10px] font-black text-muted transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                  onClick={() => setMaintenanceInfoOpen((open) => !open)}
+                  aria-label="O que é gasto estimado"
+                  aria-expanded={maintenanceInfoOpen}
+                >
+                  !
+                </button>
+              </div>
               <strong className="text-base">
                 {Math.round(maintenance).toLocaleString("pt-BR")} kcal
               </strong>
+              {maintenanceInfoOpen && (
+                <div
+                  role="tooltip"
+                  className="absolute bottom-full left-0 z-30 mb-2 w-[220px] rounded-xl border border-border bg-card p-3 text-[11px] leading-[1.55] text-muted shadow-xl"
+                >
+                  <strong className="mb-1 block text-xs text-primary">Gasto energético diário</strong>
+                  Estimativa das calorias que você gasta por dia considerando sua taxa basal e seu nível de atividade.
+                </div>
+              )}
             </div>
             <div className="h-11 w-px bg-line xl:hidden" />
-            <div className="pl-4 xl:border-t xl:border-line xl:pl-0 xl:pt-3">
-              <p className="mb-[5px] text-[11px] text-muted">Taxa basal</p>
+            <div ref={bmrInfoRef} className="relative pl-4 xl:border-t xl:border-line xl:pl-0 xl:pt-3">
+              <div className="mb-[5px] flex items-center gap-1.5">
+                <p className="text-[11px] text-muted">Taxa basal</p>
+                <button
+                  type="button"
+                  className="grid size-[18px] place-items-center rounded-full border border-border bg-card text-[10px] font-black text-muted transition-colors hover:border-brand hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/30"
+                  onClick={() => setBmrInfoOpen((open) => !open)}
+                  aria-label="O que é taxa basal"
+                  aria-expanded={bmrInfoOpen}
+                >
+                  !
+                </button>
+              </div>
               <strong className="text-base">
                 {Math.round(bmr).toLocaleString("pt-BR")} kcal
               </strong>
+              {bmrInfoOpen && (
+                <div
+                  role="tooltip"
+                  className="absolute bottom-full right-0 z-30 mb-2 w-[220px] rounded-xl border border-border bg-card p-3 text-[11px] leading-[1.55] text-muted shadow-xl xl:left-0 xl:right-auto"
+                >
+                  <strong className="mb-1 block text-xs text-primary">Taxa metabólica basal</strong>
+                  Quantidade estimada de calorias que seu corpo usa em repouso para manter funções essenciais, como respirar e manter a temperatura.
+                </div>
+              )}
             </div>
           </section>
 
