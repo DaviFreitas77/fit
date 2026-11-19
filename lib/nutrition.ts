@@ -12,6 +12,7 @@ export type MealCategory =
   | "Café da manhã"
   | "Almoço"
   | "Café da tarde"
+  | "Janta"
   | "Ceia";
 
 export type Meal = {

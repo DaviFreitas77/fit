@@ -79,6 +79,7 @@ export function MealModal({
               <option value="Café da manhã">Café da manhã</option>
               <option value="Almoço">Almoço</option>
               <option value="Café da tarde">Café da tarde</option>
+              <option value="Janta">Janta</option>
               <option value="Ceia">Ceia</option>
             </select>
           </label>
