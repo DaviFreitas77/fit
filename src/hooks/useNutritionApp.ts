@@ -137,7 +137,7 @@ export function useNutritionApp() {
     return selectedMonday >= currentMonday;
   }, [selectedDate]);
 
-  function saveProfile(event: FormEvent<HTMLFormElement>) {
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const goalType = form.get("goalType");
@@ -151,6 +151,7 @@ export function useNutritionApp() {
       activity: Number(form.get("activity")),
       goal: signedGoal,
     });
+
     setActivityChoice(Number(form.get("activity")));
     setProfileConfigured(true);
     setProfileOpen(false);

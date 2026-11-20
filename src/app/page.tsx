@@ -5,8 +5,11 @@ import { MealModal } from "@/components/MealModal";
 import { Onboarding } from "@/components/Onboarding";
 import { ProfileModal } from "@/components/ProfileModal";
 import { useNutritionApp } from "@/hooks/useNutritionApp";
+import { useUser } from "@/hooks/userHook";
+import { authClient } from "@/lib/auth-cliente";
 
 export default function Home() {
+  const { user, isPending, isAuthenticated } = useUser();
   const app = useNutritionApp();
 
   if (!app.loaded || !app.profileConfigured) {
@@ -32,7 +35,7 @@ export default function Home() {
   return (
     <>
       <Dashboard
-        profileName={app.profile.name}
+        profileName={app.profile.name || user?.name || "Usuário"}
         greeting={app.greeting}
         selectedDateObject={selectedDateObject}
         weekDays={app.weekDays}

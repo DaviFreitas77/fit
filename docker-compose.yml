@@ -1,0 +1,66 @@
+
+services:
+  # Aplicação Next.js (Frontend + API)
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+
+    container_name: fit-app
+    restart: unless-stopped
+    command: npm run dev
+
+    ports:
+      - "${FRONT_PORT:-3000}:3000"
+
+    environment:
+      NODE_ENV: development
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+
+      # Banco de dados
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-fit}
+      DB_USER: ${MYSQL_USER:-fit}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-fit_password}
+
+      DATABASE_URL: mysql://${MYSQL_USER:-fit}:${MYSQL_PASSWORD:-fit_password}@mysql:3306/${MYSQL_DATABASE:-fit}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    volumes:
+      - ./:/app
+      - node_modules:/app/node_modules
+      - next_build:/app/.next
+
+  # Banco de dados
+  mysql:
+    image: mysql:8.4
+    container_name: fit-mysql
+    restart: unless-stopped
+
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-fit}
+      MYSQL_USER: ${MYSQL_USER:-fit}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fit_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+
+    ports:
+      - "${MYSQL_PORT:-3307}:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  mysql_data:
+  node_modules:
+  next_build:

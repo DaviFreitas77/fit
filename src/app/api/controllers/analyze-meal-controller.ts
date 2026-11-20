@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ValidationError } from "yup";
 import { MealAnalysisDTO } from "../dtos/meals/analyze-meal-dto";
 import { analyzeMealSchema } from "../schemas/meal-schema";
-
+import { getVisitorId, registerVisitor } from "@/lib/guest";
 
 export async function POST(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -11,6 +11,14 @@ export async function POST(request: Request) {
       { error: "GEMINI_API_KEY não configurada no servidor." },
       { status: 503 },
     );
+  }
+  const visitId = await getVisitorId();
+
+  const verifyVisitor = await registerVisitor(visitId);
+  console.log("verifyVisitor", verifyVisitor);
+
+  if(verifyVisitor && verifyVisitor instanceof NextResponse) {
+    return verifyVisitor;
   }
 
   let body: unknown;
@@ -33,7 +41,7 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof ValidationError) {
       return NextResponse.json(
-        { error: error.errors , details: error.errors },
+        { error: error.errors, details: error.errors },
         { status: 400 },
       );
     }
