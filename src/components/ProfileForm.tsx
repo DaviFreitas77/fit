@@ -9,7 +9,8 @@ type Props = {
   activityChoice: number;
   onActivityChange: (value: number) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  logOut: () => void;
+  logOut? : () => void; 
+  
   submitLabel: string;
 };
 

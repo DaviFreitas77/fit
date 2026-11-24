@@ -24,6 +24,7 @@ export function Onboarding({ profile, activityChoice, onActivityChange, onSubmit
           <span className="mt-2 block max-w-[430px] text-xs leading-[1.6] text-muted">Essas informações serão usadas para calcular seu metabolismo basal e a meta de calorias.</span>
         </div>
         <ProfileForm
+         
           profile={profile}
           activityChoice={activityChoice}
           onActivityChange={onActivityChange}
