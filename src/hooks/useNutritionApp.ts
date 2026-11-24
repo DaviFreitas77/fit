@@ -157,6 +157,8 @@ export function useNutritionApp() {
     setProfileOpen(false);
   }
 
+  
+
   function addMeal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);

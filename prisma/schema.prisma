@@ -18,6 +18,10 @@ model User {
   email         String    @unique
   password      String?
   dateOfBirth   DateTime
+  gender        String?
+  age           Int?
+  weight        Float?
+  height        Float?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)

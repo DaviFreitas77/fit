@@ -12,6 +12,7 @@ export default function Home() {
   const { user, isPending, isAuthenticated } = useUser();
   const app = useNutritionApp();
 
+
   if (!app.loaded || !app.profileConfigured) {
     return (
       <Onboarding

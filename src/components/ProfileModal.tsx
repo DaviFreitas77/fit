@@ -4,6 +4,9 @@ import { FormEvent } from "react";
 import { type Profile } from "@/lib/nutrition";
 import { ProfileForm } from "./ProfileForm";
 import { motion } from "motion/react";
+import { authClient } from "@/lib/auth-cliente";
+import { useRouter } from "next/navigation";
+
 
 type Props = {
   open: boolean;
@@ -14,7 +17,16 @@ type Props = {
   onClose: () => void;
 };
 
-export function ProfileModal({ open, profile, activityChoice, onActivityChange, onSubmit, onClose }: Props) {
+export function ProfileModal({
+  open,
+  profile,
+  activityChoice,
+  onActivityChange,
+  onSubmit,
+  onClose,
+}: Props) {
+
+  const router = useRouter();
   if (!open) return null;
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -23,6 +35,29 @@ export function ProfileModal({ open, profile, activityChoice, onActivityChange, 
   const modalVariants = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.1, delayChildren: 0.08 } },
+  };
+
+  const logOut = async () => {
+    await authClient.signOut(
+      {
+        callbackURL: "/",
+      },
+      {
+        onRequest: () => {
+          console.log("Logging out...");
+        },
+        onSuccess: () => {
+          console.log("Logged out successfully.");
+          router.push("/");
+
+          localStorage.removeItem("nutrition-profile");
+          localStorage.removeItem("nutrition-days");
+        },
+        onError: (error) => {
+          console.error("Error logging out:", error);
+        },
+      },
+    );
   };
 
   return (
@@ -41,9 +76,14 @@ export function ProfileModal({ open, profile, activityChoice, onActivityChange, 
         initial="hidden"
         animate="visible"
       >
-        <motion.div className="mb-[18px] flex items-start justify-between" variants={itemVariants}>
+        <motion.div
+          className="mb-[18px] flex items-start justify-between"
+          variants={itemVariants}
+        >
           <div>
-            <p className="mb-[5px] text-xs font-black  text-brand">Cálculo automático</p>
+            <p className="mb-[5px] text-xs font-black  text-brand">
+              Cálculo automático
+            </p>
             <h2 className="m-0 text-[22px] font-black">Meu perfil</h2>
           </div>
           <motion.button
@@ -57,7 +97,14 @@ export function ProfileModal({ open, profile, activityChoice, onActivityChange, 
           </motion.button>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <ProfileForm profile={profile} activityChoice={activityChoice} onActivityChange={onActivityChange} onSubmit={onSubmit} submitLabel="Salvar perfil" />
+          <ProfileForm
+            profile={profile}
+            activityChoice={activityChoice}
+            onActivityChange={onActivityChange}
+            onSubmit={onSubmit}
+            submitLabel="Salvar perfil"
+            logOut={logOut}
+          />
         </motion.div>
       </motion.div>
     </motion.div>

@@ -10,8 +10,4 @@ CREATE TABLE `GuestUsage` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateIndex
-CREATE INDEX `account_userId_idx` ON `account`(`userId`(191));
 
--- CreateIndex
-CREATE INDEX `session_userId_idx` ON `session`(`userId`(191));
