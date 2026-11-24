@@ -12,14 +12,14 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
-  const visitId = await getVisitorId();
+  // const visitId = await getVisitorId();
 
-  const verifyVisitor = await registerVisitor(visitId);
-  console.log("verifyVisitor", verifyVisitor);
+  // const verifyVisitor = await registerVisitor(visitId);
+  // console.log("verifyVisitor", verifyVisitor);
 
-  if(verifyVisitor && verifyVisitor instanceof NextResponse) {
-    return verifyVisitor;
-  }
+  // if(verifyVisitor && verifyVisitor instanceof NextResponse) {
+  //   return verifyVisitor;
+  // }
 
   let body: unknown;
   try {
