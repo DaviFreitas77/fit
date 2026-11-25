@@ -30,6 +30,16 @@ export default function Home() {
       )
     : app.meals;
 
+  const visibleTotals = visibleMeals.reduce(
+    (totals, meal) => ({
+      calories: totals.calories + meal.calories,
+      protein: totals.protein + meal.protein,
+      carbs: totals.carbs + meal.carbs,
+      fat: totals.fat + meal.fat,
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+
 
   useEffect(() => {
     if (
@@ -101,10 +111,14 @@ export default function Home() {
         onShiftWeek={app.shiftDate}
         onSelectDate={app.setSelectedDate}
         onOpenProfile={openProfile}
-        remaining={app.remaining}
+        remaining={app.target - visibleTotals.calories}
         target={app.target}
-        totals={app.totals}
-        progress={app.progress}
+        totals={visibleTotals}
+        progress={
+          app.target > 0
+            ? Math.min((visibleTotals.calories / app.target) * 100, 100)
+            : 0
+        }
         maintenance={app.maintenance}
         bmr={app.bmr}
         macroTargets={app.macroTargets}
