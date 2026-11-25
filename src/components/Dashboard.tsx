@@ -328,7 +328,7 @@ export function Dashboard(props: Props) {
             <div className="mt-3 grid gap-2">
               {meals.map((meal) => (
                 <motion.div
-                  className="grid min-h-[76px] cursor-pointer grid-cols-[44px_1fr_auto] items-center gap-2.5 rounded-2xl border border-line bg-paper p-2.5 md:grid-cols-[44px_1fr_250px_110px_34px]"
+                  className="grid min-h-[76px] cursor-pointer grid-cols-[44px_minmax(0,1fr)_auto_30px] items-center gap-2.5 rounded-2xl border border-line bg-paper p-2.5 md:grid-cols-[44px_1fr_250px_110px_34px]"
                   key={meal.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -364,7 +364,7 @@ export function Dashboard(props: Props) {
                   </strong>
                   <button
                     type="button"
-                    className="hidden size-[30px] place-items-center rounded-full bg-line text-[18px] text-muted md:grid"
+                    className="grid size-[30px] place-items-center rounded-full bg-line text-[18px] text-muted"
                     onClick={(event) => {
                       event.stopPropagation();
                       onRemoveMeal(meal.id);
