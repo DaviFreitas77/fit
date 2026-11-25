@@ -9,6 +9,7 @@ const adapter = new PrismaMariaDb({
   database: process.env.DB_NAME!,
   connectionLimit: 3,
   timezone: "Z",
+  allowPublicKeyRetrieval: true,
 });
 
 export const prisma = new PrismaClient({ adapter });
