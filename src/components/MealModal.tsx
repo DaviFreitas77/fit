@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
-import { type MealDraft } from "@/lib/nutrition";
+import { getMealCategory, type MealDraft } from "@/lib/nutrition";
 import { motion } from "motion/react";
 
 type Props = {
@@ -84,7 +84,7 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
         <motion.div className="grid grid-cols-1 gap-[9px] rounded-[14px] border border-border bg-card p-3" variants={itemVariants}>
           <motion.label className="grid gap-[6px] text-[10px] font-extrabold text-muted" variants={itemVariants}>
             Refeição
-            <select className={inputClass} name="category" defaultValue="Almoço">
+            <select className={inputClass} name="category" defaultValue={getMealCategory()}>
               <option value="Café da manhã">Café da manhã</option>
               <option value="Almoço">Almoço</option>
               <option value="Café da tarde">Café da tarde</option>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   calculateBMR,
   dateKey,
@@ -11,8 +12,12 @@ import {
   type MealDraft,
   type Profile,
 } from "@/lib/nutrition";
+import { useUser } from "./userHook";
+import { mealsQueryKey } from "./useMeals";
 
 export function useNutritionApp() {
+  const { user, isAuthenticated } = useUser();
+  const queryClient = useQueryClient();
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [days, setDays] = useState<DayData>({});
   const [selectedDate, setSelectedDate] = useState("");
@@ -51,7 +56,7 @@ export function useNutritionApp() {
         const normalizedDays = Object.fromEntries(
           Object.entries(parsedDays).map(([date, meals]) => [
             date,
-            meals.map((meal) => ({ ...meal, foods: meal.foods ?? [] })),
+            meals.map((meal) => ({ ...meal })),
           ]),
         ) as DayData;
         setDays(normalizedDays);
@@ -61,7 +66,8 @@ export function useNutritionApp() {
   }, []);
 
   useEffect(() => {
-    if (loaded) localStorage.setItem("nutrition-profile", JSON.stringify(profile));
+    if (loaded)
+      localStorage.setItem("nutrition-profile", JSON.stringify(profile));
   }, [profile, loaded]);
 
   useEffect(() => {
@@ -79,21 +85,33 @@ export function useNutritionApp() {
   }, []);
 
   const bmr = useMemo(() => calculateBMR(profile), [profile]);
-  const maintenance = useMemo(() => bmr * profile.activity, [bmr, profile.activity]);
+  const maintenance = useMemo(
+    () => bmr * profile.activity,
+    [bmr, profile.activity],
+  );
   const target = Math.round(maintenance + profile.goal);
-  const meals = useMemo(() => selectedDate ? days[selectedDate] ?? [] : [], [days, selectedDate]);
-  const totals = useMemo(() => meals.reduce(
-    (sum, meal) => ({
-      calories: sum.calories + meal.calories,
-      protein: sum.protein + meal.protein,
-      carbs: sum.carbs + meal.carbs,
-      fat: sum.fat + meal.fat,
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 },
-  ), [meals]);
+
+  const meals = useMemo(
+    () => (selectedDate ? (days[selectedDate] ?? []) : []),
+    [days, selectedDate],
+  );
+  const totals = useMemo(
+    () =>
+      meals.reduce(
+        (sum, meal) => ({
+          calories: sum.calories + meal.calories,
+          protein: sum.protein + meal.protein,
+          carbs: sum.carbs + meal.carbs,
+          fat: sum.fat + meal.fat,
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      ),
+    [meals],
+  );
 
   const remaining = target - totals.calories;
-  const progress = target > 0 ? Math.min((totals.calories / target) * 100, 100) : 0;
+  const progress =
+    target > 0 ? Math.min((totals.calories / target) * 100, 100) : 0;
   const macroTargets = {
     protein: Math.round(profile.weight * 2),
     carbs: Math.round((target * 0.45) / 4),
@@ -112,7 +130,9 @@ export function useNutritionApp() {
       return {
         key: dateKey(date),
         future: dateKey(date) > today,
-        short: new Intl.DateTimeFormat("pt-BR", { weekday: "short" }).format(date).replace(".", ""),
+        short: new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+          .format(date)
+          .replace(".", ""),
         number: date.getDate(),
       };
     });
@@ -157,11 +177,17 @@ export function useNutritionApp() {
     setProfileOpen(false);
   }
 
-  
-
-  function addMeal(event: FormEvent<HTMLFormElement>) {
+  async function addMeal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const form = new FormData(event.currentTarget);
+    const now = new Date();
+   const time = now.toLocaleTimeString("pt-BR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
+  
     const meal: Meal = {
       id: crypto.randomUUID(),
       name: String(form.get("name")).trim(),
@@ -170,9 +196,46 @@ export function useNutritionApp() {
       protein: Number(form.get("protein") || 0),
       carbs: Number(form.get("carbs") || 0),
       fat: Number(form.get("fat") || 0),
-      time: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date()),
+      time,
       foods: mealDraft.foods,
     };
+
+    setMealError("");
+    if (isAuthenticated) {
+      try {
+        const response = await fetch("/api/register-meal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: meal.name,
+            calories: meal.calories,
+            protein: meal.protein,
+            carbs: meal.carbs,
+            fat: meal.fat,
+            category: meal.category,
+            time: meal.time,
+            createdAt: `${selectedDate}T${time}:00`,
+            foods: meal.foods,
+          }),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          setMealError(data.error || "Não foi possível registrar a refeição.");
+          return;
+        }
+
+        await queryClient.invalidateQueries({
+          queryKey: mealsQueryKey(user?.id),
+          exact: true,
+        });
+      } catch (error) {
+        console.error("Error registering meal:", error);
+        setMealError("Erro ao registrar a refeição.");
+        return;
+      }
+    }
+
     setDays((current) => ({
       ...current,
       [selectedDate]: [meal, ...(current[selectedDate] ?? [])],
@@ -186,14 +249,15 @@ export function useNutritionApp() {
       fat: "",
       foods: [],
     });
-    setMealError("");
     setMealOpen(false);
   }
 
   function removeMeal(id: string) {
     setDays((current) => ({
       ...current,
-      [selectedDate]: (current[selectedDate] ?? []).filter((meal) => meal.id !== id),
+      [selectedDate]: (current[selectedDate] ?? []).filter(
+        (meal) => meal.id !== id,
+      ),
     }));
   }
 
@@ -210,11 +274,15 @@ export function useNutritionApp() {
       const response = await fetch("/api/analyze-meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description: mealDescription }),
+        body: JSON.stringify({
+          description: mealDescription,
+          hour: new Date().getHours(),
+        }),
         signal: controller.signal,
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Não foi possível analisar a refeição.");
+      if (!response.ok)
+        throw new Error(data.error || "Não foi possível analisar a refeição.");
       setMealDraft({
         name: data.name,
         calories: String(data.calories),
@@ -227,7 +295,9 @@ export function useNutritionApp() {
       setMealError(
         error instanceof DOMException && error.name === "AbortError"
           ? "A análise demorou demais. Tente novamente."
-          : error instanceof Error ? error.message : "Erro ao analisar a refeição.",
+          : error instanceof Error
+            ? error.message
+            : "Erro ao analisar a refeição.",
       );
     } finally {
       window.clearTimeout(timeout);
@@ -236,11 +306,39 @@ export function useNutritionApp() {
   }
 
   return {
-    profile, days, selectedDate, setSelectedDate, profileOpen, setProfileOpen,
-    mealOpen, setMealOpen, loaded, profileConfigured, greeting, activityChoice,
-    setActivityChoice, mealDescription, setMealDescription, mealDraft, setMealDraft,
-    analyzingMeal, mealError, bmr, maintenance, target, meals, totals, remaining,
-    progress, macroTargets, weekDays, shiftDate, nextWeekLocked, saveProfile,
-    addMeal, removeMeal, analyzeMeal,
+    profile,
+    days,
+    selectedDate,
+    setSelectedDate,
+    profileOpen,
+    setProfileOpen,
+    mealOpen,
+    setMealOpen,
+    loaded,
+    profileConfigured,
+    greeting,
+    activityChoice,
+    setActivityChoice,
+    mealDescription,
+    setMealDescription,
+    mealDraft,
+    setMealDraft,
+    analyzingMeal,
+    mealError,
+    bmr,
+    maintenance,
+    target,
+    meals,
+    totals,
+    remaining,
+    progress,
+    macroTargets,
+    weekDays,
+    shiftDate,
+    nextWeekLocked,
+    saveProfile,
+    addMeal,
+    removeMeal,
+    analyzeMeal,
   };
 }

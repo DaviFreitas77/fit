@@ -22,12 +22,15 @@ model User {
   age           Int?
   weight        Float?
   height        Float?
+  activity      Float?
+  goal          Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   emailVerified Boolean   @default(false)
   image         String?   @db.Text
   sessions      Session[]
   accounts      Account[]
+  nutritionAnalyses nutritionAnalyses[]
 
   @@map("user")
 }
@@ -87,4 +90,32 @@ model GuestUsage {
   analysesCount  Int      @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+
+model nutritionAnalyses {
+   id            String   @id @default(uuid())
+   fkUser          String
+   calories      Int
+   carbs         Int
+   fat           Int
+   protein       Int 
+   category      String
+   name          String
+   time          String
+   createdAt     DateTime 
+
+   foods   detailsAnalyses[]
+   user      User @relation(fields: [fkUser], references:[id], onDelete:Cascade)
+
+}
+
+
+model detailsAnalyses {
+  id            String   @id @default(uuid())
+  fkAnalyse     String
+  name          String
+  calories      Int
+
+  analysis     nutritionAnalyses @relation(fields: [fkAnalyse], references: [id], onDelete: Cascade)
 }

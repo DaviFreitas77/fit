@@ -126,7 +126,7 @@ export function Dashboard(props: Props) {
         </div>
       </aside>
 
-      <section className="min-h-screen px-4 pb-24 pt-6 md:max-w-[1180px] md:px-10 md:pb-12 md:pt-9 xl:px-14">
+      <section className="min-h-screen px-4 pb-24 pt-6  md:max-w-[1180px] md:px-10 md:pb-12 md:pt-9 xl:px-14">
         <header className="flex items-start justify-between gap-3">
           <div>
             <h1 className="mb-[5px] text-xs font-black capitalize  text-brand">

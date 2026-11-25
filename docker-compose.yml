@@ -15,6 +15,7 @@ services:
 
     environment:
       NODE_ENV: development
+      TZ: America/Sao_Paulo
       GEMINI_API_KEY: ${GEMINI_API_KEY}
 
       # Banco de dados
@@ -41,7 +42,10 @@ services:
     container_name: fit-mysql
     restart: unless-stopped
 
+    command: ["mysqld", "--default-time-zone=-03:00"]
+
     environment:
+      TZ: America/Sao_Paulo
       MYSQL_DATABASE: ${MYSQL_DATABASE:-fit}
       MYSQL_USER: ${MYSQL_USER:-fit}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-fit_password}

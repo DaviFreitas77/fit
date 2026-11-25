@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { ValidationError } from "yup";
-import { MealAnalysisDTO } from "../dtos/meals/analyze-meal-dto";
-import { analyzeMealSchema } from "../schemas/meal-schema";
+import { MealAnalysisDTO } from "../../dtos/meals/analyze-meal-dto";
+import { analyzeMealSchema } from "../../schemas/meal-schema";
 import { getVisitorId, registerVisitor } from "@/lib/guest";
+import { registerMeal } from "./register-meal-service";
+import { getMealCategory } from "@/lib/nutrition";
 
-export async function POST(request: Request) {
+export async function analyseMeal(request: Request) {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -12,14 +14,17 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   }
-  // const visitId = await getVisitorId();
 
-  // const verifyVisitor = await registerVisitor(visitId);
-  // console.log("verifyVisitor", verifyVisitor);
+  const models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"];
 
-  // if(verifyVisitor && verifyVisitor instanceof NextResponse) {
-  //   return verifyVisitor;
-  // }
+  const visitId = await getVisitorId();
+
+  const verifyVisitor = await registerVisitor(visitId);
+  console.log("verifyVisitor", verifyVisitor);
+
+  if (verifyVisitor && verifyVisitor instanceof NextResponse) {
+    return verifyVisitor;
+  }
 
   let body: unknown;
   try {
@@ -32,12 +37,14 @@ export async function POST(request: Request) {
   }
 
   let description: string;
+  let hour: number;
   try {
     const validatedBody = await analyzeMealSchema.validate(body, {
       abortEarly: false,
       stripUnknown: true,
     });
     description = validatedBody.description;
+    hour = validatedBody.hour ?? new Date().getHours();
   } catch (error) {
     if (error instanceof ValidationError) {
       return NextResponse.json(
@@ -68,42 +75,48 @@ Inclua um item separado para cada alimento, nunca agrupe alimentos diferentes.
 
 Se houver incerteza, use uma estimativa conservadora.`;
 
-  let response: Response;
-  try {
-    response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
-      {
-        method: "POST",
-        signal: AbortSignal.timeout(25_000),
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: "application/json",
+  let response: Response | null = null;
+  let lastError = "";
+
+  for (const model of models) {
+    try {
+      const attempt = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: "POST",
+          signal: AbortSignal.timeout(25_000),
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
           },
-        }),
-      },
-    );
-  } catch (error) {
-    const timedOut = error instanceof Error && error.name === "TimeoutError";
-    return NextResponse.json(
-      {
-        error: timedOut
-          ? "A análise demorou demais. Tente novamente em alguns segundos."
-          : "Não foi possível conectar ao Gemini.",
-      },
-      { status: timedOut ? 504 : 502 },
-    );
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: "application/json",
+            },
+          }),
+        },
+      );
+
+      if (attempt.ok) {
+        response = attempt;
+        break;
+      }
+
+      lastError = await attempt.text();
+
+      if (![404, 429, 500, 502, 503, 504].includes(attempt.status)) {
+        break;
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "Erro desconhecido";
+    }
   }
 
-  if (!response.ok) {
-    const detail = await response.text();
+  if (!response) {
     return NextResponse.json(
-      { error: "Não foi possível analisar a refeição.", detail },
+      { error: "Não foi possível gerar a análise.", detail: lastError },
       { status: 502 },
     );
   }
@@ -133,6 +146,11 @@ Se houver incerteza, use uma estimativa conservadora.`;
       protein: Math.max(0, Math.round(Number(analysis.protein) || 0)),
       carbs: Math.max(0, Math.round(Number(analysis.carbs) || 0)),
       fat: Math.max(0, Math.round(Number(analysis.fat) || 0)),
+      time: new Intl.DateTimeFormat("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date()),
+      category: getMealCategory(hour),
       foods,
     };
     return NextResponse.json(result);

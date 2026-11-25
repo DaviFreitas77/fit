@@ -4,14 +4,45 @@ import { Dashboard } from "@/components/Dashboard";
 import { MealModal } from "@/components/MealModal";
 import { Onboarding } from "@/components/Onboarding";
 import { ProfileModal } from "@/components/ProfileModal";
+import { useMeals } from "@/hooks/useMeals";
 import { useNutritionApp } from "@/hooks/useNutritionApp";
-import { useUser } from "@/hooks/userHook";
-import { authClient } from "@/lib/auth-cliente";
+import { syncUser, useUser } from "@/hooks/userHook";
+import { dateKey } from "@/lib/nutrition";
+import { useEffect } from "react";
 
 export default function Home() {
   const { user, isPending, isAuthenticated } = useUser();
   const app = useNutritionApp();
+  const { data: meals } = useMeals();
 
+  const visibleMeals = isAuthenticated && meals
+    ? meals.filter(
+        (meal) => dateKey(new Date(meal.createdAt)) === app.selectedDate,
+      )
+    : app.meals;
+
+  useEffect(() => {
+    if (
+      isPending ||
+      !isAuthenticated ||
+      !app.loaded ||
+      !app.profileConfigured
+    ) {
+      return;
+    }
+
+    const syncApp = async () => {
+      await syncUser(app.profile, []);
+    };
+
+    void syncApp();
+  }, [
+    isPending,
+    isAuthenticated,
+    app.loaded,
+    app.profileConfigured,
+    app.profile,
+  ]);
 
   if (!app.loaded || !app.profileConfigured) {
     return (
@@ -52,7 +83,7 @@ export default function Home() {
         maintenance={app.maintenance}
         bmr={app.bmr}
         macroTargets={app.macroTargets}
-        meals={app.meals}
+        meals={visibleMeals}
         onOpenMeal={() => app.setMealOpen(true)}
         onRemoveMeal={app.removeMeal}
       />

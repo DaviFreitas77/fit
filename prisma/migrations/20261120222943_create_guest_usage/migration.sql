@@ -9,5 +9,3 @@ CREATE TABLE `GuestUsage` (
     UNIQUE INDEX `GuestUsage_visitorId_key`(`visitorId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
-

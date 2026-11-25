@@ -15,10 +15,20 @@ export type MealCategory =
   | "Janta"
   | "Ceia";
 
+export function getMealCategory(hour = new Date().getHours()): MealCategory {
+  if (hour >= 5 && hour < 11) return "Café da manhã";
+  if (hour >= 11 && hour < 15) return "Almoço";
+  if (hour >= 15 && hour < 18) return "Café da tarde";
+  if (hour >= 18 && hour < 22) return "Janta";
+  return "Ceia";
+}
+
 export type MealFood = {
   name: string;
   calories: number;
 };
+
+
 
 export type Meal = {
   id: string;
@@ -30,6 +40,7 @@ export type Meal = {
   fat: number;
   time: string;
   foods: MealFood[];
+
 };
 
 export type DayData = Record<string, Meal[]>;
