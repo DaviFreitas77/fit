@@ -5,8 +5,13 @@ import { analyzeMealSchema } from "../../schemas/meal-schema";
 import { getVisitorId, registerVisitor } from "@/lib/guest";
 import { registerMeal } from "./register-meal-service";
 import { getMealCategory } from "@/lib/nutrition";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export async function analyseMeal(request: Request) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
@@ -17,13 +22,15 @@ export async function analyseMeal(request: Request) {
 
   const models = ["gemini-3.1-flash-lite", "gemini-3.5-flash-lite"];
 
-  const visitId = await getVisitorId();
+  if (!session) {
+    const visitId = await getVisitorId();
 
-  const verifyVisitor = await registerVisitor(visitId);
-  console.log("verifyVisitor", verifyVisitor);
+    const verifyVisitor = await registerVisitor(visitId);
+    console.log("verifyVisitor", verifyVisitor);
 
-  if (verifyVisitor && verifyVisitor instanceof NextResponse) {
-    return verifyVisitor;
+    if (verifyVisitor && verifyVisitor instanceof NextResponse) {
+      return verifyVisitor;
+    }
   }
 
   let body: unknown;
