@@ -271,7 +271,7 @@ export function useNutritionApp() {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 20_000);
     try {
-      const response = await fetch("/api/analyze-meal", {
+      const response = await fetch("/api/meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
