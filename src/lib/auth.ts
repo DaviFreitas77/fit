@@ -22,7 +22,6 @@ export const auth = betterAuth({
       enabled: true,
       requireEmailVerification:false,
   },
-
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 dias
     updateAge: 60 * 60 * 24, // 1 dia
