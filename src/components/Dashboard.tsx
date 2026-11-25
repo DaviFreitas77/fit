@@ -364,7 +364,7 @@ export function Dashboard(props: Props) {
                   </strong>
                   <button
                     type="button"
-                    className="grid size-[30px] place-items-center rounded-full bg-line text-[18px] text-muted"
+                  className="hidden size-[30px] place-items-center rounded-full bg-line text-[18px] text-muted md:grid"
                     onClick={(event) => {
                       event.stopPropagation();
                       onRemoveMeal(meal.id);
@@ -432,6 +432,16 @@ export function Dashboard(props: Props) {
               <strong>Total</strong>
               <strong>{selectedMeal.calories} kcal</strong>
             </div>
+            <button
+              type="button"
+              className="mt-5 min-h-11 w-full rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-600 md:hidden"
+              onClick={() => {
+                onRemoveMeal(selectedMeal.id);
+                setSelectedMeal(null);
+              }}
+            >
+              Excluir
+            </button>
             </motion.div>
           </motion.div>
         )}
