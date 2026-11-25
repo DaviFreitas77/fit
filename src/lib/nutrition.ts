@@ -39,6 +39,7 @@ export type Meal = {
   carbs: number;
   fat: number;
   time: string;
+  createdAt: string;
   foods: MealFood[];
 
 };
@@ -91,14 +92,36 @@ export function dateKey(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return `${day}-${month}-${year}`;
+}
+
+export function dateFromKey(key: string) {
+  const match = /^(\d{2})-(\d{2})-(\d{4})$/.exec(key);
+  if (!match) return new Date(NaN);
+  const [, day, month, year] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day), 12);
+}
+
+export function dateFromStored(value: string) {
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(value);
+  if (isoDate) {
+    const [, year, month, day, hour = "12", minute = "0", second = "0"] = isoDate;
+    return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  }
+  const match = /^(\d{2})[/-](\d{2})[/-](\d{4})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(value);
+  if (match) {
+    const [, day, month, year, hour = "12", minute = "0", second = "0"] = match;
+    return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+  }
+  return new Date(value);
 }
 
 export function formatDate(date: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
-    weekday: "long",
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
+    year: "numeric",
+    weekday: "long",
   }).format(date);
 }
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   calculateBMR,
+  dateFromKey,
   dateKey,
   defaultProfile,
   getGreeting,
@@ -25,6 +26,8 @@ export function useNutritionApp() {
   const [mealOpen, setMealOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [profileConfigured, setProfileConfigured] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const profileSavePending = useRef(false);
   const [greeting, setGreeting] = useState("Olá");
   const [activityChoice, setActivityChoice] = useState(1.55);
   const [mealDescription, setMealDescription] = useState("");
@@ -37,8 +40,10 @@ export function useNutritionApp() {
     foods: [],
   });
   const [analyzingMeal, setAnalyzingMeal] = useState(false);
+  const [savingMeal, setSavingMeal] = useState(false);
   const [mealError, setMealError] = useState("");
 
+  
   useEffect(() => {
     queueMicrotask(() => {
       setSelectedDate(dateKey(new Date()));
@@ -95,6 +100,10 @@ export function useNutritionApp() {
     () => (selectedDate ? (days[selectedDate] ?? []) : []),
     [days, selectedDate],
   );
+  const allMeals = useMemo(
+    () => Object.values(days).flat(),
+    [days],
+  );
   const totals = useMemo(
     () =>
       meals.reduce(
@@ -121,7 +130,7 @@ export function useNutritionApp() {
   const weekDays = useMemo(() => {
     if (!selectedDate) return [];
     const today = dateKey(new Date());
-    const selected = new Date(`${selectedDate}T12:00:00`);
+    const selected = dateFromKey(selectedDate);
     const monday = new Date(selected);
     monday.setDate(selected.getDate() - ((selected.getDay() + 6) % 7));
     return Array.from({ length: 7 }, (_, index) => {
@@ -133,13 +142,15 @@ export function useNutritionApp() {
         short: new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
           .format(date)
           .replace(".", ""),
+
+       
         number: date.getDate(),
       };
     });
   }, [selectedDate]);
 
   function shiftDate(offset: number) {
-    const date = new Date(`${selectedDate}T12:00:00`);
+    const date = dateFromKey(selectedDate);
     date.setDate(date.getDate() + offset);
     const today = new Date();
     today.setHours(12, 0, 0, 0);
@@ -149,7 +160,7 @@ export function useNutritionApp() {
   const nextWeekLocked = useMemo(() => {
     if (!selectedDate) return true;
     const today = new Date();
-    const selected = new Date(`${selectedDate}T12:00:00`);
+    const selected = dateFromKey(selectedDate);
     const currentMonday = new Date(today);
     currentMonday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
     const selectedMonday = new Date(selected);
@@ -174,20 +185,30 @@ export function useNutritionApp() {
 
     setActivityChoice(Number(form.get("activity")));
     setProfileConfigured(true);
-    setProfileOpen(false);
+    setProfileSaving(isAuthenticated);
+    profileSavePending.current = isAuthenticated;
+    if (!isAuthenticated) setProfileOpen(false);
   }
+
+  const finishProfileSave = useCallback(() => {
+    setProfileSaving(false);
+    if (profileSavePending.current) {
+      setProfileOpen(false);
+      profileSavePending.current = false;
+    }
+  }, []);
 
   async function addMeal(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = new FormData(event.currentTarget);
     const now = new Date();
-   const time = now.toLocaleTimeString("pt-BR", {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-  
+    const time = now.toLocaleTimeString("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+
     const meal: Meal = {
       id: crypto.randomUUID(),
       name: String(form.get("name")).trim(),
@@ -196,17 +217,20 @@ export function useNutritionApp() {
       protein: Number(form.get("protein") || 0),
       carbs: Number(form.get("carbs") || 0),
       fat: Number(form.get("fat") || 0),
+      createdAt: `${selectedDate}T${time}:00`,
       time,
       foods: mealDraft.foods,
     };
 
     setMealError("");
     if (isAuthenticated) {
+      setSavingMeal(true);
       try {
         const response = await fetch("/api/register-meal", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            id: meal.id,
             name: meal.name,
             calories: meal.calories,
             protein: meal.protein,
@@ -233,6 +257,8 @@ export function useNutritionApp() {
         console.error("Error registering meal:", error);
         setMealError("Erro ao registrar a refeição.");
         return;
+      } finally {
+        setSavingMeal(false);
       }
     }
 
@@ -316,6 +342,7 @@ export function useNutritionApp() {
     setMealOpen,
     loaded,
     profileConfigured,
+    profileSaving,
     greeting,
     activityChoice,
     setActivityChoice,
@@ -324,11 +351,13 @@ export function useNutritionApp() {
     mealDraft,
     setMealDraft,
     analyzingMeal,
+    savingMeal,
     mealError,
     bmr,
     maintenance,
     target,
     meals,
+    allMeals,
     totals,
     remaining,
     progress,
@@ -337,6 +366,7 @@ export function useNutritionApp() {
     shiftDate,
     nextWeekLocked,
     saveProfile,
+    finishProfileSave,
     addMeal,
     removeMeal,
     analyzeMeal,

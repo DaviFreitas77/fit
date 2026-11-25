@@ -103,7 +103,7 @@ model nutritionAnalyses {
    category      String
    name          String
    time          String
-   createdAt     DateTime 
+   createdAt     String 
 
    foods   detailsAnalyses[]
    user      User @relation(fields: [fkUser], references:[id], onDelete:Cascade)

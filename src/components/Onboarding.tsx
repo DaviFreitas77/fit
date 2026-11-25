@@ -9,9 +9,10 @@ type Props = {
   activityChoice: number;
   onActivityChange: (value: number) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  saving: boolean;
 };
 
-export function Onboarding({ profile, activityChoice, onActivityChange, onSubmit }: Props) {
+export function Onboarding({ profile, activityChoice, onActivityChange, onSubmit, saving }: Props) {
   return (
     <main className="grid min-h-screen place-items-center bg-canvas p-[18px] md:p-8">
       <section className="w-full max-w-[520px] rounded-[20px] border border-border bg-card p-[22px_16px] shadow-xl md:rounded-3xl md:p-8">
@@ -29,6 +30,7 @@ export function Onboarding({ profile, activityChoice, onActivityChange, onSubmit
           activityChoice={activityChoice}
           onActivityChange={onActivityChange}
           onSubmit={onSubmit}
+          saving={saving}
           submitLabel="Salvar e continuar"
         />
       </section>

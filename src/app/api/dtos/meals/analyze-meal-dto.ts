@@ -4,12 +4,14 @@ export interface AnalyzeMealDTO {
 }
 
 export interface MealAnalysisDTO {
+  id?: string;
   name: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
   category: string;
+  createdAt?: string;
   time: string;
   foods: {
     name: string;
@@ -28,6 +30,7 @@ export interface MealSync {
 
 
 export interface RegisterMealDTO {
+  id?: string;
   name: string;
   calories: number;
   protein: number;

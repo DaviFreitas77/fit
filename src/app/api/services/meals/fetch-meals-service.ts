@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { formatLocalDateTime } from "@/lib/local-date-time";
+
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
@@ -27,7 +27,7 @@ export async function fetchMeals() {
   return Response.json(
     meals.map((meal) => ({
       ...meal,
-      createdAt: formatLocalDateTime(meal.createdAt),
+      createdAt: meal.createdAt,
     })),
     { status: 200 },
   );

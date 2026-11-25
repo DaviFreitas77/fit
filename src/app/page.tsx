@@ -7,41 +7,65 @@ import { ProfileModal } from "@/components/ProfileModal";
 import { useMeals } from "@/hooks/useMeals";
 import { useNutritionApp } from "@/hooks/useNutritionApp";
 import { syncUser, useUser } from "@/hooks/userHook";
-import { dateKey } from "@/lib/nutrition";
+import { dateFromStored, dateKey } from "@/lib/nutrition";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 export default function Home() {
   const { user, isPending, isAuthenticated } = useUser();
+  const queryClient = useQueryClient();
   const app = useNutritionApp();
   const { data: meals } = useMeals();
+  const {
+    allMeals,
+    finishProfileSave,
+    loaded,
+    profile,
+    profileConfigured,
+  } = app;
 
   const visibleMeals = isAuthenticated && meals
     ? meals.filter(
-        (meal) => dateKey(new Date(meal.createdAt)) === app.selectedDate,
+        (meal) => dateKey(dateFromStored(meal.createdAt)) === app.selectedDate,
       )
     : app.meals;
+
 
   useEffect(() => {
     if (
       isPending ||
       !isAuthenticated ||
-      !app.loaded ||
-      !app.profileConfigured
+      !loaded ||
+      !profileConfigured
     ) {
       return;
     }
 
     const syncApp = async () => {
-      await syncUser(app.profile, []);
+      try {
+        const result = await syncUser(profile, allMeals);
+        if (result && user?.id) {
+          await queryClient.invalidateQueries({
+            queryKey: ["meals", user.id],
+            exact: true,
+          });
+        }
+      } finally {
+        finishProfileSave();
+      }
     };
 
-    void syncApp();
+    syncApp();
   }, [
     isPending,
     isAuthenticated,
-    app.loaded,
-    app.profileConfigured,
-    app.profile,
+    loaded,
+    profileConfigured,
+    profile,
+    allMeals,
+    finishProfileSave,
+    queryClient,
+    user?.id,
   ]);
 
   if (!app.loaded || !app.profileConfigured) {
@@ -51,12 +75,13 @@ export default function Home() {
         activityChoice={app.activityChoice}
         onActivityChange={app.setActivityChoice}
         onSubmit={app.saveProfile}
+        saving={app.profileSaving}
       />
     );
   }
 
   const selectedDateObject = app.selectedDate
-    ? new Date(`${app.selectedDate}T12:00:00`)
+    ? dateFromStored(app.selectedDate)
     : new Date("2020-01-01T12:00:00");
 
   const openProfile = () => {
@@ -93,6 +118,7 @@ export default function Home() {
         activityChoice={app.activityChoice}
         onActivityChange={app.setActivityChoice}
         onSubmit={app.saveProfile}
+        saving={app.profileSaving}
         onClose={() => app.setProfileOpen(false)}
       />
       <MealModal
@@ -100,6 +126,7 @@ export default function Home() {
         description={app.mealDescription}
         draft={app.mealDraft}
         analyzing={app.analyzingMeal}
+        saving={app.savingMeal}
         error={app.mealError}
         onDescriptionChange={app.setMealDescription}
         onDraftChange={app.setMealDraft}

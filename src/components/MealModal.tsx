@@ -3,12 +3,14 @@
 import { FormEvent } from "react";
 import { getMealCategory, type MealDraft } from "@/lib/nutrition";
 import { motion } from "motion/react";
+import { Spinner } from "@/components/Spinner";
 
 type Props = {
   open: boolean;
   description: string;
   draft: MealDraft;
   analyzing: boolean;
+  saving: boolean;
   error: string;
   onDescriptionChange: (value: string) => void;
   onDraftChange: (draft: MealDraft) => void;
@@ -17,7 +19,7 @@ type Props = {
   onClose: () => void;
 };
 
-export function MealModal({ open, description, draft, analyzing, error, onDescriptionChange, onDraftChange, onAnalyze, onSubmit, onClose }: Props) {
+export function MealModal({ open, description, draft, analyzing, saving, error, onDescriptionChange, onDraftChange, onAnalyze, onSubmit, onClose }: Props) {
   if (!open) return null;
   const update = (field: keyof MealDraft, value: string) => onDraftChange({ ...draft, [field]: value });
   const inputClass = "h-12 w-full rounded-[11px] border border-border bg-surface px-3 text-[13px] text-primary outline-none focus:border-brand focus:ring-[3px] focus:ring-brand/10";
@@ -73,6 +75,7 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
           />
           {error && <p className="text-[11px] font-extrabold text-error" role="alert">{error}</p>}
           <motion.button type="button" className="min-h-11 w-full rounded-xl bg-brand-dark text-xs font-extrabold text-white disabled:cursor-wait disabled:opacity-65" onClick={onAnalyze} disabled={analyzing} whileTap={{ scale: 0.98 }}>
+            {analyzing && <Spinner className="mr-2 inline-block align-middle" />}
             {analyzing ? "Analisando..." : "Preencher com IA"}
           </motion.button>
         </motion.div>
@@ -113,7 +116,10 @@ export function MealModal({ open, description, draft, analyzing, error, onDescri
             <input className={inputClass} name="fat" type="number" min="0" step="0.1" value={draft.fat} onChange={(event) => update("fat", event.target.value)} placeholder="g" />
           </motion.label>
         </motion.div>
-        <motion.button className="mt-[14px] min-h-12 w-full rounded-xl bg-primary text-xs font-extrabold text-primary-foreground" type="submit" variants={itemVariants} whileTap={{ scale: 0.98 }}>Registrar</motion.button>
+        <motion.button className="mt-[14px] flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-xs font-extrabold text-primary-foreground disabled:cursor-wait disabled:opacity-65" type="submit" disabled={saving} variants={itemVariants} whileTap={{ scale: 0.98 }}>
+          {saving && <Spinner />}
+          {saving ? "Salvando..." : "Registrar"}
+        </motion.button>
       </motion.form>
     </motion.div>
   );

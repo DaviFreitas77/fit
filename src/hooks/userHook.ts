@@ -17,6 +17,7 @@ export function useUser() {
 }
 
 export async function syncUser(profile: Profile, meals: Meal[]) {
+
   try {
     const response = await fetch("/api/sync", {
       method: "POST",

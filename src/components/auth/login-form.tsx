@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { authClient } from "@/lib/auth-cliente";
 import { loginSchema, type LoginFormValues } from "@/schemas/auth";
+import { Spinner } from "@/components/Spinner";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -79,9 +80,10 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="mt-1 h-[52px] w-full rounded-[14px] bg-[#1a241f] text-[13px] font-black text-white"
+        className="mt-1 flex h-[52px] w-full items-center justify-center gap-2 rounded-[14px] bg-[#1a241f] text-[13px] font-black text-white disabled:cursor-wait disabled:opacity-70"
       >
-        Entrar
+        {isSubmitting && <Spinner />}
+        {isSubmitting ? "Entrando..." : "Entrar"}
       </button>
     </form>
   );

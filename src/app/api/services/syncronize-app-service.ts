@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { ProfileDTO } from "../dtos/user/user-dto";
@@ -11,7 +10,6 @@ export async function syncApp(request: Request) {
   });
 
   const body = await request.json();
-  console.log("syncApp body", body);
 
   const profile: ProfileDTO = {
     name: body.profile.name,
@@ -23,7 +21,9 @@ export async function syncApp(request: Request) {
     goal: body.profile.goal,
   };
 
-  const meals = body.meals.map((meal: MealAnalysisDTO) => ({
+  const incomingMeals = (body.meals ?? []) as MealAnalysisDTO[];
+  const meals = incomingMeals.map((meal) => ({
+    id: meal.id ?? crypto.randomUUID(),
     name: meal.name,
     calories: Math.round(meal.calories),
     protein: Math.round(meal.protein),
@@ -31,11 +31,8 @@ export async function syncApp(request: Request) {
     fat: Math.round(meal.fat),
     category: meal.category,
     time: meal.time,
-  }));
-
-  const detailsMeals = body.meals.map((meal: MealAnalysisDTO) => ({
-    name: meal.name,
-    calories: Math.round(meal.calories),
+    createdAt: meal.createdAt ?? "",
+    foods: meal.foods ?? [],
   }));
 
   if (!session) {
@@ -72,36 +69,50 @@ export async function syncApp(request: Request) {
     });
 
     if (meals.length > 0) {
-      await prisma.$transaction(async (tx) => {
-        for (let i = 0; i < meals.length; i++) {
-          const analyse = await tx.nutritionAnalyses.create({
-            data: {
-              ...meals[i],
-              fkUser: session.user.id,
-            },
-          });
-
-          await tx.detailsAnalyses.create({
-            data: {
-              ...detailsMeals[i],
-              fkAnalyse: analyse.id,
-            },
-          });
-        }
+      const existingMeals = await prisma.nutritionAnalyses.findMany({
+        where: {
+          fkUser: session.user.id,
+          id: { in: meals.map((meal) => meal.id) },
+        },
+        select: { id: true },
       });
+      const existingIds = new Set(existingMeals.map((meal) => meal.id));
+      const mealsToInsert = meals.filter((meal) => !existingIds.has(meal.id));
+
+      if (mealsToInsert.length > 0) {
+        await prisma.$transaction(async (tx) => {
+          for (const meal of mealsToInsert) {
+            await tx.nutritionAnalyses.create({
+              data: {
+                id: meal.id,
+                name: meal.name,
+                calories: meal.calories,
+                protein: meal.protein,
+                carbs: meal.carbs,
+                fat: meal.fat,
+                category: meal.category,
+                time: meal.time,
+                createdAt: meal.createdAt,
+                fkUser: session.user.id,
+                foods: {
+                  create: meal.foods.map((food) => ({
+                    name: food.name,
+                    calories: Math.round(food.calories),
+                  })),
+                },
+              },
+            });
+          }
+        });
+      }
     }
     return Response.json(
       { message: "Dados sincronizados com sucesso" },
       { status: 200 },
     );
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      console.log(error.code);
-    }
+    console.error("ERRO NO SYNC:", error);
 
-    return Response.json(
-      { error: "Erro ao atualizar perfil" },
-      { status: 500 },
-    );
+    throw error;
   }
 }

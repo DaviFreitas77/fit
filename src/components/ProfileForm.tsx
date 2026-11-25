@@ -4,12 +4,15 @@ import { FormEvent } from "react";
 import { activityLevels, type Profile } from "@/lib/nutrition";
 import { useUser } from "@/hooks/userHook";
 import { useRouter } from "next/navigation";
+import { Spinner } from "@/components/Spinner";
 type Props = {
   profile: Profile;
   activityChoice: number;
   onActivityChange: (value: number) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   logOut? : () => void; 
+  loggingOut?: boolean;
+  saving?: boolean;
   
   submitLabel: string;
 };
@@ -20,6 +23,8 @@ export function ProfileForm({
   onActivityChange,
   onSubmit,
   logOut,
+  loggingOut = false,
+  saving = false,
   submitLabel,
 }: Props) {
   const router = useRouter();
@@ -124,10 +129,12 @@ export function ProfileForm({
         </label>
       </div>
       <button
-        className="mt-[18px] min-h-11 w-full rounded-[10px] bg-primary px-4 text-xs font-extrabold text-primary-foreground md:mt-[22px]"
+        disabled={saving}
+        className="mt-[18px] flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 text-xs font-extrabold text-primary-foreground disabled:cursor-wait disabled:opacity-70 md:mt-[22px]"
         type="submit"
       >
-        {submitLabel}
+        {saving && <Spinner />}
+        {saving ? "Salvando..." : submitLabel}
       </button>
       <button
         onClick={
@@ -137,10 +144,12 @@ export function ProfileForm({
                 router.push("/auth");
               }
         }
-        className={`mt-[18px] min-h-11 w-full rounded-[10px] ${isAuthenticated ? "bg-red-400" : "bg-green-700"} px-4 text-xs font-extrabold text-primary-foreground md:mt-[22px]`}
+        disabled={loggingOut}
+        className={`mt-[18px] flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] ${isAuthenticated ? "bg-red-400" : "bg-green-700"} px-4 text-xs font-extrabold text-primary-foreground md:mt-[22px] disabled:cursor-wait disabled:opacity-70`}
         type="button"
       >
-        {isAuthenticated ? "Sair" : "Crar conta ou entrar"}
+        {loggingOut && <Spinner />}
+        {loggingOut ? "Saindo..." : isAuthenticated ? "Sair" : "Criar conta ou entrar"}
       </button>
     </form>
   );

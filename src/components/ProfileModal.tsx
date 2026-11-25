@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import { type Profile } from "@/lib/nutrition";
 import { ProfileForm } from "./ProfileForm";
 import { motion } from "motion/react";
@@ -14,6 +14,7 @@ type Props = {
   activityChoice: number;
   onActivityChange: (value: number) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  saving: boolean;
   onClose: () => void;
 };
 
@@ -23,10 +24,12 @@ export function ProfileModal({
   activityChoice,
   onActivityChange,
   onSubmit,
+  saving,
   onClose,
 }: Props) {
 
   const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
   if (!open) return null;
   const itemVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -38,23 +41,23 @@ export function ProfileModal({
   };
 
   const logOut = async () => {
+    setLoggingOut(true);
     await authClient.signOut(
       {
         callbackURL: "/",
       },
       {
         onRequest: () => {
-          console.log("Logging out...");
+          setLoggingOut(true);
         },
         onSuccess: () => {
           console.log("Logged out successfully.");
+          localStorage.clear();
           router.push("/");
-
-          localStorage.removeItem("nutrition-profile");
-          localStorage.removeItem("nutrition-days");
         },
         onError: (error) => {
           console.error("Error logging out:", error);
+          setLoggingOut(false);
         },
       },
     );
@@ -102,8 +105,10 @@ export function ProfileModal({
             activityChoice={activityChoice}
             onActivityChange={onActivityChange}
             onSubmit={onSubmit}
+            saving={saving}
             submitLabel="Salvar perfil"
             logOut={logOut}
+            loggingOut={loggingOut}
           />
         </motion.div>
       </motion.div>
