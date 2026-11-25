@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   calculateBMR,
@@ -14,7 +21,8 @@ import {
   type Profile,
 } from "@/lib/nutrition";
 import { useUser } from "./userHook";
-import { mealsQueryKey } from "./useMeals";
+import { deleteMeal, mealsQueryKey } from "./useMeals";
+
 
 export function useNutritionApp() {
   const { user, isAuthenticated } = useUser();
@@ -43,7 +51,6 @@ export function useNutritionApp() {
   const [savingMeal, setSavingMeal] = useState(false);
   const [mealError, setMealError] = useState("");
 
-  
   useEffect(() => {
     queueMicrotask(() => {
       setSelectedDate(dateKey(new Date()));
@@ -100,10 +107,7 @@ export function useNutritionApp() {
     () => (selectedDate ? (days[selectedDate] ?? []) : []),
     [days, selectedDate],
   );
-  const allMeals = useMemo(
-    () => Object.values(days).flat(),
-    [days],
-  );
+  const allMeals = useMemo(() => Object.values(days).flat(), [days]);
   const totals = useMemo(
     () =>
       meals.reduce(
@@ -143,7 +147,6 @@ export function useNutritionApp() {
           .format(date)
           .replace(".", ""),
 
-       
         number: date.getDate(),
       };
     });
@@ -278,13 +281,21 @@ export function useNutritionApp() {
     setMealOpen(false);
   }
 
-  function removeMeal(id: string) {
+  async function removeMeal(id: string) {
     setDays((current) => ({
       ...current,
       [selectedDate]: (current[selectedDate] ?? []).filter(
         (meal) => meal.id !== id,
       ),
     }));
+
+    if (isAuthenticated) {
+      await deleteMeal(id);
+      await queryClient.invalidateQueries({
+        queryKey: mealsQueryKey(user?.id),
+        exact: true,
+      });
+    }
   }
 
   async function analyzeMeal() {

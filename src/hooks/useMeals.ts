@@ -32,3 +32,21 @@ export function useMeals() {
     enabled: !isPending && Boolean(user),
   });
 }
+
+
+export async function deleteMeal(mealId: string): Promise<void> {
+  const response = await fetch("/api/meal", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id: mealId }),
+  });
+
+  if (!response.ok) {
+    const result = await response.json().catch(() => null);
+    throw new Error(result?.error || "Não foi possível deletar a refeição.");
+  }
+}
+
+
