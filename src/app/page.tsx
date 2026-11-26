@@ -15,7 +15,7 @@ export default function Home() {
   const { user, isPending, isAuthenticated } = useUser();
   const queryClient = useQueryClient();
   const app = useNutritionApp();
-  const { data: meals } = useMeals();
+  const { data: meals, isLoading: mealsLoading } = useMeals();
   const {
     allMeals,
     finishProfileSave,
@@ -24,11 +24,14 @@ export default function Home() {
     profileConfigured,
   } = app;
 
-  const visibleMeals = isAuthenticated && meals
-    ? meals.filter(
-        (meal) => dateKey(dateFromStored(meal.createdAt)) === app.selectedDate,
-      )
-    : app.meals;
+  const visibleMeals = isPending
+    ? []
+    : isAuthenticated
+      ? (meals ?? []).filter(
+          (meal) =>
+            dateKey(dateFromStored(meal.createdAt)) === app.selectedDate,
+        )
+      : app.meals;
 
   const visibleTotals = visibleMeals.reduce(
     (totals, meal) => ({
@@ -114,6 +117,7 @@ export default function Home() {
         remaining={app.target - visibleTotals.calories}
         target={app.target}
         totals={visibleTotals}
+        mealsLoading={isPending || (isAuthenticated && mealsLoading)}
         progress={
           app.target > 0
             ? Math.min((visibleTotals.calories / app.target) * 100, 100)

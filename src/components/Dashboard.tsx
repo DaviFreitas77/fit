@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDate, type Meal } from "@/lib/nutrition";
 import { themeColors } from "@/lib/theme";
+import { MealListSkeleton } from "@/components/MealListSkeleton";
 import { BsArrowLeftShort, BsArrowRightShort } from "react-icons/bs";
 import { FaRegUser } from "react-icons/fa";
 import { AnimatePresence, motion } from "motion/react";
@@ -27,6 +28,7 @@ type Props = {
   bmr: number;
   macroTargets: { protein: number; carbs: number; fat: number };
   meals: Meal[];
+  mealsLoading: boolean;
   onOpenMeal: () => void;
   onRemoveMeal: (id: string) => void;
 };
@@ -72,6 +74,7 @@ export function Dashboard(props: Props) {
     bmr,
     macroTargets,
     meals,
+    mealsLoading,
     onOpenMeal,
     onRemoveMeal,
   } = props;
@@ -203,7 +206,11 @@ export function Dashboard(props: Props) {
                   Calorias restantes
                 </p>
                 <strong className="block text-[clamp(38px,12vw,58px)] leading-[0.95] tracking-[-0.07em]">
-                  {remaining.toLocaleString("pt-BR")}
+                  {mealsLoading ? (
+                    <span className="inline-block h-12 w-28 animate-pulse rounded-lg bg-line align-middle" />
+                  ) : (
+                    remaining.toLocaleString("pt-BR")
+                  )}
                 </strong>
                 <span className="mt-2.5 block text-xs text-muted">
                   de {target.toLocaleString("pt-BR")} kcal
@@ -214,7 +221,13 @@ export function Dashboard(props: Props) {
                 style={ring}
               >
                 <div className="grid size-[92px] place-content-center rounded-full bg-card text-center">
-                  <strong className="text-xl">{totals.calories}</strong>
+                  <strong className="text-xl">
+                    {mealsLoading ? (
+                      <span className="mx-auto block h-6 w-12 animate-pulse rounded bg-line" />
+                    ) : (
+                      totals.calories
+                    )}
+                  </strong>
                   <span className="text-[9px] text-muted">consumidas</span>
                 </div>
               </div>
@@ -227,11 +240,17 @@ export function Dashboard(props: Props) {
               ].map((macro) => (
                 <div className="min-w-0" key={macro.label}>
                   <div className="mb-2 h-1 rounded-full bg-line">
-                    <div className={`h-full rounded-full ${macro.color}`} style={{ width: `${Math.min((macro.total / macro.target) * 100, 100)}%` }} />
+                    {!mealsLoading && (
+                      <div className={`h-full rounded-full ${macro.color}`} style={{ width: `${Math.min((macro.total / macro.target) * 100, 100)}%` }} />
+                    )}
                   </div>
                   <span className="block truncate text-[10px] font-extrabold text-muted">{macro.label}</span>
                   <strong className="mt-0.5 block text-xs">
-                    {macro.total}g<span className="font-normal text-muted">/{macro.target}g</span>
+                    {mealsLoading ? (
+                      <span className="inline-block h-3 w-16 animate-pulse rounded bg-line align-middle" />
+                    ) : (
+                      <>{macro.total}g<span className="font-normal text-muted">/{macro.target}g</span></>
+                    )}
                   </strong>
                 </div>
               ))}
@@ -307,7 +326,9 @@ export function Dashboard(props: Props) {
               + Adicionar
             </button>
           </div>
-          {meals.length === 0 ? (
+          {mealsLoading ? (
+            <MealListSkeleton />
+          ) : meals.length === 0 ? (
             <div className="mt-3 grid min-h-[210px] place-items-center content-center rounded-2xl border border-border bg-card text-center">
               <div className="grid size-[42px] place-items-center rounded-full bg-brand-soft text-2xl text-brand-dark">
                 ＋
