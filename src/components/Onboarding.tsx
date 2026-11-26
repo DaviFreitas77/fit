@@ -2,7 +2,9 @@
 
 import { FormEvent } from "react";
 import { type Profile } from "@/lib/nutrition";
-import { ProfileForm } from "./ProfileForm";
+import { ProfileForm } from "./profile/ProfileForm";
+
+
 
 type Props = {
   profile: Profile;

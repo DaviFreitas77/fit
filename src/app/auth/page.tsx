@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import AuthPage from "@/components/auth/auth-page";
+import AuthPage from "@/app/pages/auth-page";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 

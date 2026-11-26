@@ -1,9 +1,10 @@
 "use client";
 
 import { Dashboard } from "@/components/Dashboard";
-import { MealModal } from "@/components/MealModal";
+import { MealModal } from "@/components/meal/MealModal";
 import { Onboarding } from "@/components/Onboarding";
-import { ProfileModal } from "@/components/ProfileModal";
+import { ProfileModal } from "@/components/profile/ProfileModal";
+
 import { useMeals } from "@/hooks/useMeals";
 import { useNutritionApp } from "@/hooks/useNutritionApp";
 import { syncUser, useUser } from "@/hooks/userHook";

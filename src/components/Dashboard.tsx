@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDate, type Meal } from "@/lib/nutrition";
 import { themeColors } from "@/lib/theme";
-import { MealListSkeleton } from "@/components/MealListSkeleton";
+import { MealListSkeleton } from "@/components/meal/MealListSkeleton";
 import { BsArrowLeftShort, BsArrowRightShort } from "react-icons/bs";
 import { FaRegUser } from "react-icons/fa";
 import { AnimatePresence, motion } from "motion/react";
